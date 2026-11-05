@@ -170,6 +170,10 @@ class ControlHandoff:
         manual = self.backend.request('manual', '/motion', timeout=.5)
         if manual.get('busy') or manual.get('hold_active') or manual.get('last_error') or not manual.get('connected'):
             raise HandoffError(409, 'Manual controls must be idle and healthy before claiming')
+        limits = manual.get('limits')
+        if (not isinstance(limits, dict) or limits.get('acknowledged') is not True or
+                limits.get('confirmation_required') or manual.get('limits_confirmation_required')):
+            raise HandoffError(409, 'Confirm movement limits before automatic tracking')
         with self.state:
             if (self.mode != 'manual' or self.session or self.epoch != entry_epoch or
                     any(self.inflight.values())):

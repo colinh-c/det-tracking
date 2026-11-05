@@ -28,6 +28,8 @@ ACCELERATION = 75.0
 STOP_SECONDS = .85
 STOP_SETTLE_SECONDS = 1.5
 HOLD_LEASE_SECONDS = .75
+# Existing firmware defaults, also used as host fences while a saved profile
+# is unconfirmed. Manual initialization never sends LIM to apply or widen them.
 SOFT_LIMITS = {'az': (-180.0, 180.0), 'el': (-10.0, 95.0)}
 LIMITS_PROFILE = str(Path.home() / 'gimbal' / 'motion_limits.json')
 
@@ -219,21 +221,25 @@ class MotionController:
         self.soft_limits = {axis: list(bounds) for axis, bounds in SOFT_LIMITS.items()}
         self.limits_path = Path(limits_path) if limits_path else None
         self.limits_confirmed = False
-        self.limits_confirmation_required = False
+        self.limits_confirmation_required = True
         self.limits_source = 'firmware_defaults_assumed'
-        self.limits_detail = None
+        self.limits_detail = 'Limits have not been applied; manual jogs use the existing firmware default fences'
         self.limits_saved = False
         self._saved_profile_pending = False
         if self.limits_path and self.limits_path.exists():
             try:
                 profile = json.loads(self.limits_path.read_text())
-                if profile.get('schema_version') != 1 or profile.get('acknowledged') is not True:
+                if profile.get('schema_version') != 1 or not isinstance(profile.get('acknowledged'), bool):
                     raise ValueError('Unknown limits profile format')
                 self.soft_limits = validate_limits(profile['limits'])
                 self.limits_saved = True
-                self.limits_source = 'saved_profile'
-                self._saved_profile_pending = True
-                self._limits_pending('Checking saved limits against controller reset status')
+                if profile['acknowledged']:
+                    self.limits_source = 'saved_profile'
+                    self._saved_profile_pending = True
+                    self._limits_pending('Checking saved limits against controller reset status')
+                else:
+                    self.limits_source = 'saved_draft'
+                    self._limits_pending('Saved limits await explicit Apply; manual jogs use the existing firmware default fences')
             except (OSError, ValueError, KeyError, TypeError, MotionError) as error:
                 self._limits_pending('Saved limits could not be loaded; enter and Apply limits: '+str(error))
 
@@ -243,16 +249,18 @@ class MotionController:
         self.limits_confirmation_required = True
         self.limits_detail = detail
 
-    def _require_limits(self):
-        if self.limits_confirmation_required:
-            raise MotionError(409, self.limits_detail or 'Apply limits before moving')
+    def _manual_limits(self):
+        # Draft values remain visible for Apply but cannot restrict manual jogs.
+        # The MCU retains its existing fences; these defaults are host checks,
+        # not a claim of firmware readback or permission to change its limits.
+        return self.soft_limits if self.limits_confirmed else SOFT_LIMITS
 
-    def _save_limits(self, payload, position):
+    def _save_limits(self, payload, position, acknowledged=True):
         if self.limits_path is None:
             return
-        profile = {'schema_version': 1, 'limits': payload, 'acknowledged': True,
+        profile = {'schema_version': 1, 'limits': payload, 'acknowledged': acknowledged,
                    'readback_available': False, 'position_reference': dict(position),
-                   'acknowledged_at_unix_s': time.time(),
+                   ('acknowledged_at_unix_s' if acknowledged else 'unconfirmed_at_unix_s'): time.time(),
                    'confirmation_policy': 'retain_acknowledged_profile_if_encoder_disabled_flag_is_preserved; explicit_apply_after_reset'}
         self.limits_path.parent.mkdir(parents=True, exist_ok=True)
         fd, name = tempfile.mkstemp(prefix='.motion-limits-', dir=str(self.limits_path.parent))
@@ -261,6 +269,11 @@ class MotionController:
                 json.dump(profile, stream, allow_nan=False, indent=2)
                 stream.write('\n'); stream.flush(); os.fsync(stream.fileno())
             os.replace(name, self.limits_path)
+            directory_fd = os.open(self.limits_path.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
         finally:
             if os.path.exists(name): os.unlink(name)
         self.limits_saved = True
@@ -348,6 +361,9 @@ class MotionController:
 
     def _read_status(self, timeout=.25, cancellable=True, require_disabled=None, allow_track=False, limits_override=None):
         result = parse_status(self._request('STAT', timeout, cancellable))
+        # Preserve reset detection for an already initialized operation. A fresh
+        # gateway may initialize, but an unexpected reset must still latch.
+        disabled = self.initialized if require_disabled is None else require_disabled
         with self.state_lock:
             self.connected = True
             self.position = dict(result['position'])
@@ -372,14 +388,13 @@ class MotionController:
             self._limits_pending('Controller reset or encoder configuration changed; Apply limits again in the current coordinate system')
             self.initialized = False
             self.rest_position = None
-        disabled = self.initialized if require_disabled is None else require_disabled
         if disabled and result['flags'] != 0:
             raise LinkError('Controller configuration changed or reset; manual recovery required')
         for axis, value in result['position'].items():
             low, high = (self.soft_limits if limits_override is None else limits_override)[axis]
             if limits_override is not None and not low <= value <= high:
                 raise MotionError(400, 'Current '+axis+' position must be inside the proposed limits')
-            if limits_override is None and not low - POSITION_TOLERANCE <= value <= high + POSITION_TOLERANCE:
+            if limits_override is None and self.limits_confirmed and not low - POSITION_TOLERANCE <= value <= high + POSITION_TOLERANCE:
                 self._limits_pending('Current position is outside the saved bounds; enter and Apply limits containing it')
         return result['position']
 
@@ -411,10 +426,20 @@ class MotionController:
         if self._request('PING') != ['OK PONG']:
             raise LinkError('Unexpected PING response')
         self._read_status(limits_override=limits_override)
-        if limits_override is None: self._require_limits()
         validate_diagnostics(self._request('DIAG'))
         self._stop_command()
         position = self._stable(self.clock() + STOP_SETTLE_SECONDS, limits_override=limits_override)
+        if not self.limits_confirmed:
+            # ENC 0 clears the firmware reset marker. Invalidate durable profile
+            # continuity BEFORE that write so another gateway cannot mistake an
+            # unapplied draft for acknowledged limits after a service restart.
+            payload = {axis+'_'+bound: self.soft_limits[axis][index]
+                       for axis in ('az', 'el') for index, bound in enumerate(('min', 'max'))}
+            try:
+                self._save_limits(payload, position, acknowledged=False)
+            except OSError as error:
+                raise LinkError('Could not save unconfirmed limits before manual initialization: '+str(error)) from error
+            self._saved_profile_pending = False
         if self._request('ENC 0') != ['OK ENC 0']:
             raise LinkError('Old encoder feedback could not be disabled')
         if self._request('MODE SLEW') != ['OK MODE 16 VMAX 15.000']:
@@ -444,10 +469,11 @@ class MotionController:
                 self.operation_lock.release()
         with self.state_lock:
             return {'connected': self.connected, 'initialized': self.initialized,
-                    'available': self.connected and not self.blocked and not self.limits_confirmation_required,
+                    'available': self.connected and not self.blocked,
                     'busy': self.busy or self.stopping, 'recovery_required': self.blocked,
                     'position': dict(self.position) if self.position else None,
                     'limits': {'soft_limits_deg': {a: list(b) for a, b in self.soft_limits.items()},
+                               'manual_soft_limits_deg': {a: list(b) for a, b in self._manual_limits().items()},
                                'confirmation_required': self.limits_confirmation_required,
                                'acknowledged': self.limits_confirmed, 'readback_available': False,
                                'profile_saved': self.limits_saved, 'source': self.limits_source,
@@ -469,7 +495,7 @@ class MotionController:
                     'hold_lease_remaining_seconds': max(0, self.hold['deadline'] - self.clock()) if self.hold else 0,
                     'last_hold_reason': self.last_hold_reason,
                     'limits_confirmation_required': self.limits_confirmation_required,
-                    'last_error': self.last_error or (self.limits_detail if self.limits_confirmation_required else None),
+                    'last_error': self.last_error,
                     'caveat': 'Manual open-loop jogs. Encoder feedback is unavailable; reported positions are motor step counts.'}
 
     def jog(self, axis, delta):
@@ -492,7 +518,6 @@ class MotionController:
                     raise MotionError(409, 'Stop is in progress')
                 self.abort.clear()
                 self.busy = True
-            self._require_limits()
             if not self.initialized:
                 self._initialize()
             else:
@@ -500,8 +525,7 @@ class MotionController:
             position = self._stable(self.clock() + .6)
             if self.rest_position and any(abs(position[a] - self.rest_position[a]) > POSITION_TOLERANCE for a in ('az', 'el')):
                 raise LinkError('Position changed outside a completed gateway operation')
-            self._require_limits()
-            effective_delta, target = quantize_jog(position, axis, delta, self.soft_limits)
+            effective_delta, target = quantize_jog(position, axis, delta, self._manual_limits())
             operation.update(commanded_delta_deg=effective_delta, quantized_target=target)
             settled = position
             if effective_delta != 0:
@@ -611,7 +635,6 @@ class MotionController:
         operation = {'event': 'hold', 'hold_id': hold['id'], 'axis': hold['axis'],
                      'requested_velocity_deg_s': hold['velocity']}
         try:
-            self._require_limits()
             if not self.initialized:
                 self._initialize()
             else:
@@ -620,8 +643,7 @@ class MotionController:
             if self.rest_position and any(abs(position[a] - self.rest_position[a]) > POSITION_TOLERANCE for a in ('az', 'el')):
                 raise LinkError('Position changed outside a completed gateway operation')
             axis, velocity = hold['axis'], hold['velocity']
-            self._require_limits()
-            low, high = self.soft_limits[axis]
+            low, high = self._manual_limits()[axis]
             at_limit = lambda p: p[axis] >= high - POSITION_TOLERANCE if velocity > 0 else p[axis] <= low + POSITION_TOLERANCE
             if not at_limit(position):
                 az, el = (velocity, 0.0) if axis == 'az' else (0.0, velocity)
@@ -634,7 +656,6 @@ class MotionController:
                 while True:
                     self._cancel_check()
                     position = self._read_status(timeout=.2, allow_track=True)
-                    self._require_limits()
                     if at_limit(position):
                         break
                     self.sleep(.04)

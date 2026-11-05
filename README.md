@@ -85,7 +85,7 @@ Use the existing manual viewfinder with already configured local forwards:
   --motion-source http://127.0.0.1:18083
 ```
 
-The manual service runs on the Pi. Its movement limits are entered through the dashboard and explicitly applied. A reset coordinate frame requires limits confirmation. Manual jogging does not require zeroing or final camera calibration. Exactly one Pi gateway may own the motor serial device. Set `DET_MOTOR_DEVICE` in the Pi gateway's service environment to the intended controller, preferably its stable `/dev/serial/by-id/...` path. The Mac handoff does not forward this variable.
+The manual service runs on the Pi. Step and continuous jogs do not require custom limits, zeroing or final camera calibration. Confirmed user bounds remain enforced; before custom bounds are confirmed, the controller's existing travel stops still apply. Saved bounds remain available as a draft after reset. Automatic tracking requires explicitly confirmed limits in the current coordinate frame. Exactly one Pi gateway may own the motor serial device. Set `DET_MOTOR_DEVICE` in the Pi gateway's service environment to the intended controller, preferably its stable `/dev/serial/by-id/...` path. The Mac handoff does not forward this variable.
 
 Deployment hosts and paths are environment settings, documented in [deployment.md](docs/DEPLOYMENT.md). No credentials or known-host entries are bundled. Live automatic tracking and the full-flight hardware runner are separate explicit actions; obtain operator approval before starting a hardware test. Repository publication does not run, deploy, flash or arm the hardware.
 

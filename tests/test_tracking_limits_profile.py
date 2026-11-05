@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from tests.test_pi_tracking_gateway import FakeLink
-from pi_tracking_gateway import TrackingGateway, GatewayError
+from pi_tracking_gateway import TrackingGateway, GatewayError, LinkError
 
 
 class SharedLimitsTests(unittest.TestCase):
@@ -37,6 +37,15 @@ class SharedLimitsTests(unittest.TestCase):
         self.assertFalse(g.status()['limits']['acknowledged'])
         self.assertFalse(any(c.startswith('LIM') for c in self.link.commands))
         self.link.flags = 0  # let the fake's final cleanup acknowledge rest
+
+    def test_manual_unconfirmed_profile_blocks_auto_even_after_encoder_disable(self):
+        profile = json.loads(self.path.read_text())
+        profile['acknowledged'] = False
+        self.path.write_text(json.dumps(profile))
+        self.link.flags = 0
+        with self.assertRaisesRegex(LinkError, 'acknowledged'):
+            self.gateway()
+        self.assertEqual(self.link.commands, [])
     def test_count_outside_user_range_faults_even_inside_factory_range(self):
         g = self.gateway(); g.initialize()
         request = self.link.request

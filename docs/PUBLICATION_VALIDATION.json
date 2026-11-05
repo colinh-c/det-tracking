@@ -53,5 +53,13 @@
       }
     }
   ],
-  "limits": "Ideal simulations do not qualify physical tracking. Offline fixture and deployment paths were made portable for publication; core tracking algorithms retain their verified hashes."
+  "limits": "Ideal simulations do not qualify physical tracking. Offline fixture and deployment paths were made portable for publication; core tracking algorithms retain their verified hashes.",
+  "manual_jog_without_limits_update": {
+    "date": "2026-11-04",
+    "core_python_tests": 224,
+    "manual_dashboard_python_tests": 91,
+    "viewfinder_control_javascript_tests": 31,
+    "physical_jog_test": false,
+    "behavior": "Step and continuous manual jog do not require custom limits; confirmed bounds and controller travel stops remain; automatic tracking still requires acknowledged bounds."
+  }
 }

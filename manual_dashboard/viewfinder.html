@@ -12,13 +12,13 @@
 <section class="motion-panel" aria-label="Manual movement">
 <strong>Manual adjustment</strong>
 <div class="motion-controls"><label for="jogMode">Movement</label><select id="jogMode"><option value="step">Step</option><option value="continuous">Continuous slow</option></select><span id="jogStepField"><label for="jogSize">Step size</label> <input id="jogSize" type="number" value="1" min="0" step="any" aria-label="Movement in degrees"> <span class="muted">degrees</span></span><span id="jogSpeedField" hidden><label for="jogSpeed">Requested speed</label> <input id="jogSpeed" type="number" value="0.5" min="0.01" max="15" step="any" aria-label="Requested speed in degrees per second"> <span class="muted">degrees/s</span></span><button id="jogAzMinus" disabled>Az −</button><button id="jogAzPlus" disabled>Az +</button><button id="jogElMinus" disabled>El −</button><button id="jogElPlus" disabled>El +</button><button class="stop" id="motionStop" disabled>Stop movement</button></div>
-<div class="muted" id="motionHelp">Choose the move size in degrees. No zeroing or calibration required for manual jogs. Encoders are not controlling position.</div>
+<div class="muted" id="motionHelp">Choose the move size in degrees. No zeroing or calibration required for manual jogs. Manual jogs do not require Apply limits. Encoders are not controlling position.</div>
 <div id="motionStatus" role="status">Connecting to motor controller.</div>
 </section>
 <section class="motion-panel" aria-label="Movement limits">
 <strong>Movement limits</strong>
 <div class="limit-status" id="activeLimits" aria-live="polite">Active limits: waiting for controller.</div>
-<div class="muted">Draft limits in current motor coordinates, in degrees. Copying a position or applying limits does not move or zero the mount.</div>
+<div class="muted">Optional movement limits in current motor coordinates, in degrees. Copying a position or applying limits does not move or zero the mount.</div>
 <div class="limit-fields">
 <div class="limit-field"><label for="az_min">Az minimum</label><input id="az_min" type="number" step="any"><button id="use_az_min" disabled>Use current az position</button></div>
 <div class="limit-field"><label for="az_max">Az maximum</label><input id="az_max" type="number" step="any"><button id="use_az_max" disabled>Use current az position</button></div>
@@ -67,7 +67,8 @@ async function encoders(){try{const response=await fetch('/encoders');if(!respon
 const jogButtons=['jogAzMinus','jogAzPlus','jogElMinus','jogElPlus'];
 const limitFields=['az_min','az_max','el_min','el_max'];
 function limitsIdle(status=motionStatus){return Boolean(motionToken&&status?.connected&&!status?.recovery_required&&!motionBusy&&!motionStopping&&!activeHold&&!status?.busy&&!status?.hold_active&&!status?.automatic_active);}
-function movementReady(){return Boolean(motionToken&&motionStatus?.connected&&!motionStatus?.last_error&&!frozen&&!busy&&!motionBusy&&!motionStopping&&!activeHold&&!limitsBusy&&!motionStatus?.busy&&!motionStatus?.hold_active);}
+function movementAvailable(){return Boolean(motionStatus?.connected&&motionStatus?.available!==false&&!motionStatus?.last_error&&!motionStatus?.recovery_required);}
+function movementReady(){return Boolean(motionToken&&movementAvailable()&&!frozen&&!busy&&!motionBusy&&!motionStopping&&!activeHold&&!limitsBusy&&!motionStatus?.busy&&!motionStatus?.hold_active);}
 function reportedLimits(status=motionStatus){
   const limits=status?.limits?.soft_limits_deg;
   if(!limits||!['az','el'].every(axis=>Array.isArray(limits[axis])&&limits[axis].length===2&&limits[axis].every(Number.isFinite)&&limits[axis][0]<limits[axis][1]))return null;
@@ -77,7 +78,7 @@ function fillLimitDraft(values){if(!values)return;limitFields.forEach(id=>$(id).
 function renderLimits(){
   const values=reportedLimits(), info=motionStatus?.limits;
   if(!motionStatus?.connected||!values){$('activeLimits').textContent='Active limits: unavailable.';return;}
-  const prefix=info.confirmation_required?'Saved limits, Apply required':info.acknowledged?'Active limits acknowledged':'Reported limits, not confirmed';
+  const prefix=info.confirmation_required?'Saved limits pending, not active':info.acknowledged?'Active limits acknowledged':'Reported limits, not confirmed';
   $('activeLimits').textContent=`${prefix}: az ${values.az_min}° to ${values.az_max}°, el ${values.el_min}° to ${values.el_max}°.`+(info.detail?' '+info.detail:'');
   if(!limitsInitialized&&!limitsDirty)fillLimitDraft(values);
 }
@@ -132,7 +133,7 @@ function updateMotionButtons(){
 function updateJogMode(){
   const continuous=$('jogMode').value==='continuous';
   $('jogStepField').hidden=continuous;$('jogSpeedField').hidden=!continuous;
-  $('motionHelp').textContent=continuous?'Hold a direction button to move. Release to stop. No zeroing or calibration required for manual jogs. Encoders are not controlling position.':'Choose the move size in degrees. No zeroing or calibration required for manual jogs. Encoders are not controlling position.';
+  $('motionHelp').textContent=continuous?'Hold a direction button to move. Release to stop. No zeroing or calibration required for manual jogs. Manual jogs do not require Apply limits. Encoders are not controlling position.':'Choose the move size in degrees. No zeroing or calibration required for manual jogs. Manual jogs do not require Apply limits. Encoders are not controlling position.';
   updateMotionButtons();
 }
 async function jog(axis,sign){if($('jogMode').value!=='step'||!movementReady())return;const step=Number($('jogSize').value);if(!Number.isFinite(step)||step<=0){$('motionStatus').textContent='Enter a positive movement in degrees.';return;}motionBusy=true;const request=++motionRequest;updateMotionButtons();$('motionStatus').textContent='Moving…';try{await api('/motion/jog',{axis,delta:sign*step});if(request===motionRequest)$('motionStatus').textContent='Commanded step completed. Check the camera image for actual movement.';}catch(e){if(request===motionRequest)$('motionStatus').textContent=e.message;}finally{motionBusy=false;updateMotionButtons();}}
@@ -196,7 +197,7 @@ window.addEventListener('pagehide',()=>releaseHold({keepalive:true}));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseHold({keepalive:true});});
 $('jogMode').addEventListener('change',()=>{if(activeHold)releaseHold();saveJogSettings();updateJogMode();});
 $('motionStop').onclick=()=>activeHold?releaseHold({global:true}):stopMotion({});
-async function pollMotion(){try{const response=await fetch('/motion',{cache:'no-store'});if(!response.ok)throw Error('Motor controller unavailable');motionStatus=await response.json();$('motionBadge').textContent=motionStatus.connected&&!motionStatus.last_error?'Manual movement available':'Movement unavailable';if(activeHold&&(!motionStatus.connected||motionStatus.last_error))releaseHold({reason:motionStatus.last_error||'Motor controller unavailable.'});if(!motionBusy&&!activeHold&&!motionStopping){if(motionStatus.last_error)$('motionStatus').textContent=motionStatus.last_error;else if(frozen)$('motionStatus').textContent='Resume live views before moving.';else if(motionStatus.hold_active)$('motionStatus').textContent='A continuous move is active. Stop movement is available.';else if(motionStatus.position){const p=motionStatus.position;$('motionStatus').textContent=`Motor coordinates: az ${Number(p.az).toFixed(2)}°, el ${Number(p.el).toFixed(2)}°. No zeroing or calibration required for manual jogs.`;}}}catch(e){motionStatus=null;$('motionBadge').textContent='Movement unavailable';if(activeHold)releaseHold({reason:e.message});else if(!motionBusy&&!motionStopping)$('motionStatus').textContent=e.message;}renderLimits();updateMotionButtons();setTimeout(pollMotion,750);}
+async function pollMotion(){try{const response=await fetch('/motion',{cache:'no-store'});if(!response.ok)throw Error('Motor controller unavailable');motionStatus=await response.json();$('motionBadge').textContent=movementAvailable()?'Manual movement available':'Movement unavailable';if(activeHold&&!movementAvailable())releaseHold({reason:motionStatus.last_error||'Motor controller unavailable.'});if(!motionBusy&&!activeHold&&!motionStopping){if(motionStatus.last_error)$('motionStatus').textContent=motionStatus.last_error;else if(!movementAvailable())$('motionStatus').textContent='Motor controller is not ready for movement.';else if(frozen)$('motionStatus').textContent='Resume live views before moving.';else if(motionStatus.hold_active)$('motionStatus').textContent='A continuous move is active. Stop movement is available.';else if(motionStatus.position){const p=motionStatus.position;$('motionStatus').textContent=`Motor coordinates: az ${Number(p.az).toFixed(2)}°, el ${Number(p.el).toFixed(2)}°. No zeroing or calibration required for manual jogs.`;}}}catch(e){motionStatus=null;$('motionBadge').textContent='Movement unavailable';if(activeHold)releaseHold({reason:e.message});else if(!motionBusy&&!motionStopping)$('motionStatus').textContent=e.message;}renderLimits();updateMotionButtons();setTimeout(pollMotion,750);}
 restoreJogSettings();updateJogMode();
 async function loadMotion(){try{const response=await fetch('/session',{cache:'no-store'});if(!response.ok)throw Error('Refresh the dashboard');const session=await response.json();if(session.motion_enabled)motionToken=session.motion_token;else $('motionStatus').textContent='Manual movement is not configured.';}catch(e){$('motionStatus').textContent=e.message;}pollMotion();}
 poll(0);poll(1);encoders();loadMotion();

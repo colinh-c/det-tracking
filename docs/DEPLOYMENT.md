@@ -46,7 +46,9 @@ The manual and automatic gateways must never own the motor serial device simulta
 
 ## Limits, calibration and firmware
 
-The Pi gateways default to `~/gimbal/motion_limits.json` under their runtime user. Enter travel limits through the dashboard and explicitly Apply them in the current controller coordinate frame. A reset requires confirmation; the software does not silently reuse old coordinates, home, zero or synchronize the mount. Manual jogging does not require camera calibration or zeroing.
+The Pi gateways default to `~/gimbal/motion_limits.json` under their runtime user. Custom travel limits are optional for manual step and continuous jogs. Confirmed bounds remain enforced, and unconfirmed jogging still respects the controller's existing travel stops. Saved values remain a draft rather than blocking manual movement after reset. Enter and explicitly Apply limits in the current coordinate frame before automatic tracking. The software does not silently reuse old coordinates, home, zero or synchronize the mount. Manual jogging does not require camera calibration or zeroing.
+
+Before unconfirmed manual initialization disables the old encoder mode, it durably marks the profile unacknowledged while retaining its draft values. Neither service restart nor the cleared encoder flag may turn that draft into confirmed bounds. Automatic handoff and the automatic gateway reject it until an explicit successful Apply. Failure to save this invalidation prevents initialization rather than silently carrying stale limits into automatic tracking.
 
 The committed camera model uses a nominal 400 mm narrow lens and a 16 mm wide placeholder. Match final intrinsics to actual capture size, focus, boresight and roll. Confirm AS5600 bus-to-axis mapping, sign, reference and magnet validity before absolute automatic tracking. A detected magnet alone does not establish output-angle calibration.
 

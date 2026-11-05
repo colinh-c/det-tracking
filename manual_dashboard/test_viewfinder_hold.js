@@ -362,6 +362,51 @@ const limitsStatus = (overrides = {}) => ({connected:true, busy:false, hold_acti
   limits:{soft_limits_deg:{az:[-180,180],el:[-10,95]},acknowledged:false,
     confirmation_required:false,source:'firmware_defaults_assumed'}, ...overrides});
 
+test('unconfirmed saved limits are informational and both jog modes work without Apply', async () => {
+  for (const mode of ['step', 'continuous']) {
+    const h = harness(), status = limitsStatus({available:true, limits_confirmation_required:true, last_error:null});
+    status.limits.confirmation_required = true;
+    status.limits.source = 'saved_profile_pending_confirmation';
+    h.queue('/motion', response(status)); await h.eval('pollMotion()'); await h.mode(mode);
+    assert.match(h.el('activeLimits').textContent, /saved limits.*pending.*not active/i);
+    assert.match(h.el('motionHelp').textContent, /manual jogs do not require Apply/i);
+    assert.equal(h.el('motionBadge').textContent, 'Manual movement available');
+    assert.ok(buttons.every(id => !h.el(id).disabled));
+    assert.equal(h.el('motionStop').disabled, false);
+    if (mode === 'step') await h.emit(h.el('jogAzPlus'), 'click');
+    else await h.down();
+    assert.equal(h.requests(mode === 'step' ? '/motion/jog' : '/motion/hold/start').length, 1);
+    assert.equal(h.requests('/motion/limits').length, 0, 'A jog must not apply the saved draft');
+    if (mode === 'continuous') await h.emit(h.el('jogAzPlus'), 'pointerup');
+  }
+});
+
+test('controller unavailability, recovery or driver faults block either jog mode and leave Stop available', async () => {
+  for (const blocked of [{available:false}, {available:true, recovery_required:true}, {available:true, last_error:'Driver fault'}]) {
+    for (const mode of ['step', 'continuous']) {
+      const h = harness();
+      h.queue('/motion', response(limitsStatus({last_error:null, ...blocked})));
+      await h.eval('pollMotion()'); await h.mode(mode);
+      assert.ok(buttons.every(id => h.el(id).disabled));
+      assert.equal(h.el('motionBadge').textContent, 'Movement unavailable');
+      assert.equal(h.el('motionStop').disabled, false);
+      if (mode === 'step') await h.emit(h.el('jogAzPlus'), 'click');
+      else await h.down();
+      assert.equal(h.requests('/motion/jog').length + h.requests('/motion/hold/start').length, 0);
+    }
+  }
+});
+
+test('controller unavailability during a hold releases it and stops further renewal', async () => {
+  const h = harness(); await h.mode('continuous'); await h.down();
+  const holdID = h.requests('/motion/hold/start')[0].body.hold_id;
+  h.queue('/motion', response(limitsStatus({available:false, last_error:null})));
+  await h.eval('pollMotion()'); await flush();
+  assert.deepEqual(h.requests('/motion/stop').map(call => call.body), [{hold_id:holdID}]);
+  await h.advance(500);
+  assert.equal(h.requests('/motion/hold/renew').length, 0);
+});
+
 test('limits prefill once, preserve edited drafts, and never apply on load', async () => {
   const h = harness();
   h.queue('/motion', response(limitsStatus())); await h.eval('pollMotion()');

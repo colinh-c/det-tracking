@@ -62,6 +62,8 @@ class Board:
             return ['OK MODE 16 VMAX 15.000']
         if command == 'ACC 75':
             return ['OK ACC 75.00']
+        if command.startswith('LIM '):
+            return ['OK LIM']
         if command.startswith('MOVR '):
             if self.move_entered:
                 self.move_entered.set()
@@ -113,7 +115,7 @@ class ControllerTests(unittest.TestCase):
         self.assertLess(commands.index('STOP'), commands.index('MODE SLEW'))
         self.assertGreater(commands[commands.index('STOP') + 1:commands.index('ENC 0')].count('STAT'), 1)
         self.assertIn('ACC 75', commands)
-        self.assertTrue(all(not c.startswith(('CLR', 'CUR', 'ZERO', 'SYNC', 'LIM', 'VEL', 'TRK', 'MOVA')) for c in commands))
+        self.assertTrue(all(not c.startswith(('CLR', 'CUR', 'ZERO', 'SYNC', 'VEL', 'TRK', 'MOVA')) for c in commands))
         self.controller.jog('el', .25)
         self.assertEqual(1, commands.count('ENC 0'))
         self.assertEqual(1, commands.count('MODE SLEW'))
@@ -128,15 +130,15 @@ class ControllerTests(unittest.TestCase):
         self.assertNotIn('max_total_offset_deg', result['limits'])
         self.assertEqual(75, result['limits']['acceleration_deg_s2'])
 
-    def test_existing_firmware_limits_still_apply(self):
-        self.controller.jog('az', 180)
-        self.controller.jog('el', -10)
-        for axis, delta in (('az', .1), ('el', -.1)):
-            with self.subTest(axis=axis), self.assertRaises(motion.MotionError) as caught:
-                self.controller.jog(axis, delta)
-            self.assertEqual(400, caught.exception.status)
+    def test_manual_jogs_cross_default_travel_but_refuse_counter_overflow(self):
+        self.controller.jog('az', 181.)
+        result = self.controller.jog('el', -11.)
+        self.assertGreater(result['position']['az'], 180.)
+        self.assertLess(result['position']['el'], -10.)
+        with self.assertRaises(motion.MotionError) as caught:
+            self.controller.jog('az', 1e9)
+        self.assertEqual(400, caught.exception.status)
         self.assertEqual(2, sum(c.startswith('MOVR') for c in self.board.commands))
-        self.controller.jog('az', -359)
 
     def test_quantization_preserves_counter_residue_and_stays_inside_fences(self):
         start = 9 * motion.FINE_DEG
@@ -227,7 +229,8 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(result['step_count_target_confirmed'])
         self.assertAlmostEqual(1.49977, result['position']['el'])
         first_move = next(i for i, command in enumerate(self.board.commands) if command.startswith('MOVR'))
-        self.assertEqual(2, self.board.commands[:first_move].count('STOP'))
+        # Initialization retargets twice; manual fence opening retargets once.
+        self.assertEqual(3, self.board.commands[:first_move].count('STOP'))
 
     def test_fault_flag_even_hold_and_driver_short_block_motion_without_clear(self):
         for fault_kind in ('est', 'driver'):
@@ -258,7 +261,7 @@ class ControllerTests(unittest.TestCase):
         self.board.never_arrive = True
         with self.assertRaises(motion.MotionError):
             self.controller.jog('az', .1)
-        self.assertEqual(3, self.board.commands.count('STOP'))
+        self.assertEqual(4, self.board.commands.count('STOP'))
         self.assertFalse(self.controller.status()['available'])
 
     def test_reset_encoder_watchdog_reenabled_blocks_subsequent_jog(self):

@@ -8,9 +8,9 @@ No cameras or control algorithms run here. GET /status; POST /velocity with
 Command JSON + generation + ttl_s; POST /stop. POST requires X-DET-Motion: 1.
 
 Startup requires CAP VEL_LEASE_V1, then verifies PING/STAT/DIAG, STOP,
-ENC 0, MODE SLEW, ACC 75, DSTAT, STOP, and
+ENC 0, MODE SLEW, ACC 75, DSTAT, STOP, program LIM, and
 stable step counts. It never clears faults, zeros, homes, changes current,
-flashes firmware, retries a command, or reconnects. A fault requires restart.
+flashes firmware, retries a motion command, or reconnects. A fault requires restart.
 Stop/expiry revokes the generation before waiting for any serial operation.
 
 The required launch firmware enforces LVEL expiry in its 1 kHz timer interrupt.
@@ -78,6 +78,8 @@ class SerialLink:
             terminal = 'OK '
         elif re.fullmatch(r'LVEL \d+ \d+ \d+ -?\d+\.\d+ -?\d+\.\d+', command):
             terminal = 'OK LVEL '
+        elif re.fullmatch(r'LIM -?\d+\.\d+ -?\d+\.\d+ -?\d+\.\d+ -?\d+\.\d+', command):
+            terminal = 'OK LIM'
         elif command in terminators:
             terminal = terminators[command]
         else:
@@ -293,9 +295,10 @@ class TrackingGateway:
             if result['flags'] & 8:
                 self.limits_verified = False
                 raise LinkError('Controller reset detected; restore manual controls and Apply user limits before automatic operation')
-            # All services preserve ENC 0 and share the acknowledged profile.
-            # No LIM replay or claim of firmware register readback is made.
-            self.limits_verified = True
+            # ENC 0 establishes coordinate continuity, not current MCU fences.
+            # Manual jogging may have opened those fences to counter capacity.
+            # Only this gateway's explicit program-LIM acknowledgement verifies
+            # restoration before automatic motion becomes ready.
         if require_disabled and result['flags'] != 0:
             raise LinkError('Encoder-watchdog configuration changed or controller reset')
         if tracking is not None and result['mode'] != (3 if tracking else 1):
@@ -303,7 +306,7 @@ class TrackingGateway:
         for name, value in result['position'].items():
             low, high = self.soft_limits[name]
             if not low-POSITION_TOLERANCE <= value <= high+POSITION_TOLERANCE:
-                raise LinkError('Step count is outside existing firmware travel limits')
+                raise LinkError('Step count is outside configured programmed movement limits')
         with self.state_lock:
             self.position = result['position']
             self.last_status = self.clock()
@@ -412,7 +415,14 @@ class TrackingGateway:
                 if any(abs(before[a]-self.position[a]) > POSITION_TOLERANCE for a in ('az', 'el')):
                     raise LinkError('Mode conversion shifted the reported position')
                 self._check(generation, require_ready=False)
+                values = [self.soft_limits[axis][index]
+                          for axis in ('az', 'el') for index in (0, 1)]
+                command = 'LIM ' + ' '.join('%.8f' % value for value in values)
+                if self._request(command) != ['OK LIM']:
+                    raise LinkError('Programmed movement limits were not acknowledged')
+                self._check(generation, require_ready=False)
                 with self.state_lock:
+                    self.limits_verified = True
                     self.initialized = True
                     self.last_reason = 'ready'
                     self.last_diag = self.clock()

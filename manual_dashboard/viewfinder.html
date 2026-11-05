@@ -12,13 +12,13 @@
 <section class="motion-panel" aria-label="Manual movement">
 <strong>Manual adjustment</strong>
 <div class="motion-controls"><label for="jogMode">Movement</label><select id="jogMode"><option value="step">Step</option><option value="continuous">Continuous slow</option></select><span id="jogStepField"><label for="jogSize">Step size</label> <input id="jogSize" type="number" value="1" min="0" step="any" aria-label="Movement in degrees"> <span class="muted">degrees</span></span><span id="jogSpeedField" hidden><label for="jogSpeed">Requested speed</label> <input id="jogSpeed" type="number" value="0.5" min="0.01" max="15" step="any" aria-label="Requested speed in degrees per second"> <span class="muted">degrees/s</span></span><button id="jogAzMinus" disabled>Az −</button><button id="jogAzPlus" disabled>Az +</button><button id="jogElMinus" disabled>El −</button><button id="jogElPlus" disabled>El +</button><button class="stop" id="motionStop" disabled>Stop movement</button></div>
-<div class="muted" id="motionHelp">Choose the move size in degrees. No zeroing or calibration required for manual jogs. Manual jogs do not require Apply limits. Encoders are not controlling position.</div>
+<div class="muted" id="motionHelp">Choose the move size in degrees. No zeroing or calibration required for manual jogs. Manual jogs ignore programmed limits. Encoders are not controlling position.</div>
 <div id="motionStatus" role="status">Connecting to motor controller.</div>
 </section>
-<section class="motion-panel" aria-label="Movement limits">
-<strong>Movement limits</strong>
-<div class="limit-status" id="activeLimits" aria-live="polite">Active limits: waiting for controller.</div>
-<div class="muted">Optional movement limits in current motor coordinates, in degrees. Copying a position or applying limits does not move or zero the mount.</div>
+<section class="motion-panel" aria-label="Programmed movement limits">
+<strong>Programmed movement limits</strong>
+<div class="limit-status" id="activeLimits" aria-live="polite">Programmed limits: waiting for controller.</div>
+<div class="muted">Optional limits in current motor coordinates, in degrees. Apply limits is only needed for programmed or automatic movement. Copying a position or applying limits does not move or zero the mount.</div>
 <div class="limit-fields">
 <div class="limit-field"><label for="az_min">Az minimum</label><input id="az_min" type="number" step="any"><button id="use_az_min" disabled>Use current az position</button></div>
 <div class="limit-field"><label for="az_max">Az maximum</label><input id="az_max" type="number" step="any"><button id="use_az_max" disabled>Use current az position</button></div>
@@ -77,8 +77,8 @@ function reportedLimits(status=motionStatus){
 function fillLimitDraft(values){if(!values)return;limitFields.forEach(id=>$(id).value=String(values[id]));limitsInitialized=true;limitsDirty=false;}
 function renderLimits(){
   const values=reportedLimits(), info=motionStatus?.limits;
-  if(!motionStatus?.connected||!values){$('activeLimits').textContent='Active limits: unavailable.';return;}
-  const prefix=info.confirmation_required?'Saved limits pending, not active':info.acknowledged?'Active limits acknowledged':'Reported limits, not confirmed';
+  if(!motionStatus?.connected||!values){$('activeLimits').textContent='Programmed limits: unavailable.';return;}
+  const prefix=info.confirmation_required?'Programmed limits pending':info.acknowledged?'Programmed limits configured':'Programmed limits not confirmed';
   $('activeLimits').textContent=`${prefix}: az ${values.az_min}° to ${values.az_max}°, el ${values.el_min}° to ${values.el_max}°.`+(info.detail?' '+info.detail:'');
   if(!limitsInitialized&&!limitsDirty)fillLimitDraft(values);
 }
@@ -113,7 +113,7 @@ $('applyLimits').onclick=()=>limitAction(async()=>{
   $('limitsMessage').textContent='Applying limits…';
   const status=await api('/motion/limits',values);
   motionStatus=status;renderLimits();fillLimitDraft(reportedLimits(status)||values);
-  $('limitsMessage').textContent='Limits acknowledged. Recheck limits after controller restart.';
+  $('limitsMessage').textContent='Programmed limits configured. Recheck limits after controller restart.';
 });
 function saveJogSettings(){try{window.localStorage.setItem('det.manualJog',JSON.stringify({mode:$('jogMode').value,size:$('jogSize').value,speed:$('jogSpeed').value}));}catch{}}
 function restoreJogSettings(){try{const saved=JSON.parse(window.localStorage.getItem('det.manualJog')||'null');if(!saved)return;if(['step','continuous'].includes(saved.mode))$('jogMode').value=saved.mode;for(const [key,id,max] of [['size','jogSize',Infinity],['speed','jogSpeed',15]]){const value=Number(saved[key]);if(Number.isFinite(value)&&value>0&&value<=max)$(id).value=String(value);}}catch{}}
@@ -133,7 +133,7 @@ function updateMotionButtons(){
 function updateJogMode(){
   const continuous=$('jogMode').value==='continuous';
   $('jogStepField').hidden=continuous;$('jogSpeedField').hidden=!continuous;
-  $('motionHelp').textContent=continuous?'Hold a direction button to move. Release to stop. No zeroing or calibration required for manual jogs. Manual jogs do not require Apply limits. Encoders are not controlling position.':'Choose the move size in degrees. No zeroing or calibration required for manual jogs. Manual jogs do not require Apply limits. Encoders are not controlling position.';
+  $('motionHelp').textContent=continuous?'Hold a direction button to move. Release to stop. No zeroing or calibration required for manual jogs. Manual jogs ignore programmed limits. Encoders are not controlling position.':'Choose the move size in degrees. No zeroing or calibration required for manual jogs. Manual jogs ignore programmed limits. Encoders are not controlling position.';
   updateMotionButtons();
 }
 async function jog(axis,sign){if($('jogMode').value!=='step'||!movementReady())return;const step=Number($('jogSize').value);if(!Number.isFinite(step)||step<=0){$('motionStatus').textContent='Enter a positive movement in degrees.';return;}motionBusy=true;const request=++motionRequest;updateMotionButtons();$('motionStatus').textContent='Moving…';try{await api('/motion/jog',{axis,delta:sign*step});if(request===motionRequest)$('motionStatus').textContent='Commanded step completed. Check the camera image for actual movement.';}catch(e){if(request===motionRequest)$('motionStatus').textContent=e.message;}finally{motionBusy=false;updateMotionButtons();}}

@@ -61,5 +61,13 @@
     "viewfinder_control_javascript_tests": 31,
     "physical_jog_test": false,
     "behavior": "Step and continuous manual jog do not require custom limits; confirmed bounds and controller travel stops remain; automatic tracking still requires acknowledged bounds."
+  },
+  "manual_jog_program_limits_separation": {
+    "date": "2026-11-04",
+    "core_python_tests": 227,
+    "manual_dashboard_python_tests": 93,
+    "viewfinder_control_javascript_tests": 32,
+    "physical_jog_test": false,
+    "behavior": "Manual steps and holds bypass programmed travel limits; saved program values are retained; automatic startup restores those values before accepting motion."
   }
 }

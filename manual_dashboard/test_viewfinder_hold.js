@@ -368,8 +368,8 @@ test('unconfirmed saved limits are informational and both jog modes work without
     status.limits.confirmation_required = true;
     status.limits.source = 'saved_profile_pending_confirmation';
     h.queue('/motion', response(status)); await h.eval('pollMotion()'); await h.mode(mode);
-    assert.match(h.el('activeLimits').textContent, /saved limits.*pending.*not active/i);
-    assert.match(h.el('motionHelp').textContent, /manual jogs do not require Apply/i);
+    assert.match(h.el('activeLimits').textContent, /programmed limits pending/i);
+    assert.match(h.el('motionHelp').textContent, /manual jogs ignore programmed limits/i);
     assert.equal(h.el('motionBadge').textContent, 'Manual movement available');
     assert.ok(buttons.every(id => !h.el(id).disabled));
     assert.equal(h.el('motionStop').disabled, false);
@@ -378,6 +378,28 @@ test('unconfirmed saved limits are informational and both jog modes work without
     assert.equal(h.requests(mode === 'step' ? '/motion/jog' : '/motion/hold/start').length, 1);
     assert.equal(h.requests('/motion/limits').length, 0, 'A jog must not apply the saved draft');
     if (mode === 'continuous') await h.emit(h.el('jogAzPlus'), 'pointerup');
+  }
+});
+
+test('manual step and continuous commands can cross the programmed bounds without Apply', async () => {
+  for (const mode of ['step', 'continuous']) {
+    const h = harness(), status = limitsStatus({available:true, last_error:null,
+      manual_ignores_program_limits:true, position:{az:12.5,el:23.5}});
+    status.limits = {soft_limits_deg:{az:[12,12.5],el:[23,24]}, acknowledged:true,
+      confirmation_required:false, source:'saved_acknowledged_profile'};
+    h.queue('/motion', response(status)); await h.eval('pollMotion()'); await h.mode(mode);
+    assert.match(h.el('activeLimits').textContent, /programmed limits configured/i);
+    assert.match(h.el('motionHelp').textContent, /manual jogs ignore programmed limits/i);
+    assert.equal(h.el('jogAzPlus').disabled, false);
+    if (mode === 'step') {
+      h.el('jogSize').value = '2'; await h.emit(h.el('jogAzPlus'), 'click');
+      assert.deepEqual(h.requests('/motion/jog').map(call => call.body), [{axis:'az',delta:2}]);
+    } else {
+      h.el('jogSpeed').value = '0.75'; await h.down();
+      assert.equal(h.requests('/motion/hold/start')[0].body.velocity, 0.75);
+      await h.emit(h.el('jogAzPlus'), 'pointerup');
+    }
+    assert.equal(h.requests('/motion/limits').length, 0);
   }
 });
 

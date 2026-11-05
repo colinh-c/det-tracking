@@ -174,6 +174,17 @@ class ControlHandoff:
         if (not isinstance(limits, dict) or limits.get('acknowledged') is not True or
                 limits.get('confirmation_required') or manual.get('limits_confirmation_required')):
             raise HandoffError(409, 'Confirm movement limits before automatic tracking')
+        try:
+            bounds, position = limits['soft_limits_deg'], manual['position']
+            inside = all(len(bounds[axis]) == 2 and
+                         all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+                             for x in (*bounds[axis], position[axis])) and
+                         bounds[axis][0] <= position[axis] <= bounds[axis][1]
+                         for axis in ('az', 'el'))
+        except (KeyError, TypeError, ValueError):
+            inside = False
+        if not inside:
+            raise HandoffError(409, 'Move inside the programmed movement limits before automatic tracking')
         with self.state:
             if (self.mode != 'manual' or self.session or self.epoch != entry_epoch or
                     any(self.inflight.values())):

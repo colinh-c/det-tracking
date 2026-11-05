@@ -8,9 +8,11 @@ The three-module tracker is implemented and tested offline. Physical tracking qu
 
 The standalone checkout passed 222 core Python tests, 83 manual-dashboard Python tests, 28 JavaScript viewfinder-control tests and the JavaScript geometry checks. These tests used simulated device boundaries and temporary local servers. No connected hardware was contacted. Core tracking source hashes match the tested simulation snapshot; see `docs/PUBLICATION_VALIDATION.json`.
 
-## Optional manual limits update
+## Manual jogging and programmed limits
 
-Step and continuous manual jogs now work without custom limits. Confirmed user bounds, existing controller travel stops, Stop/lease behavior and fault handling remain. Before unconfirmed initialization clears the encoder reset marker, the profile acknowledgement is atomically invalidated and both file and directory are flushed. Restart cannot promote the saved draft. Automatic handoff and gateway reject unconfirmed bounds. The updated checkout passed 224 core Python tests, 91 manual-dashboard Python tests and 31 JavaScript viewfinder-control tests. No physical jog test was requested.
+Manual steps and continuous holds ignore programmed travel limits. Each requested manual move stops and confirms stable counts, then acknowledges finite numerical-capacity MCU fences before motion. Saved program bounds and their acknowledgement are retained. Idle startup/status reads do not open fences. Stop, lease, hard-switch faults, speed and acceleration handling remain.
+
+Automatic handoff checks the mount is inside confirmed program bounds before changing services. The automatic gateway independently checks position and requires acknowledgement of restored program LIM before becoming ready. Manual reset journaling still prevents stale bounds being promoted after ENC0. The updated checkout passed 227 core Python tests, 93 manual-dashboard Python tests and 32 JavaScript viewfinder-control tests. No physical jog test was requested.
 
 ## Corrected failure mechanisms
 

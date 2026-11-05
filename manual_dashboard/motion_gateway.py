@@ -28,9 +28,14 @@ ACCELERATION = 75.0
 STOP_SECONDS = .85
 STOP_SETTLE_SECONDS = 1.5
 HOLD_LEASE_SECONDS = .75
-# Existing firmware defaults, also used as host fences while a saved profile
-# is unconfirmed. Manual initialization never sends LIM to apply or widen them.
+# Firmware defaults initialize the editable programmed-travel profile. Manual
+# moves bypass those bounds, retaining only a finite position-counter capacity.
 SOFT_LIMITS = {'az': (-180.0, 180.0), 'el': (-10.0, 95.0)}
+# Leave 65536 fine units for float32 conversion and motor-pulse rounding. This
+# range is an encoding guard, not a mechanical travel limit or safe-workspace claim.
+MANUAL_FINE_CAPACITY = (2**31 - 1) - (1 << 16)
+MANUAL_CAPACITY_DEG = MANUAL_FINE_CAPACITY * FINE_DEG
+MANUAL_LIMITS = {axis: (-MANUAL_CAPACITY_DEG, MANUAL_CAPACITY_DEG) for axis in ('az', 'el')}
 LIMITS_PROFILE = str(Path.home() / 'gimbal' / 'motion_limits.json')
 
 
@@ -223,7 +228,7 @@ class MotionController:
         self.limits_confirmed = False
         self.limits_confirmation_required = True
         self.limits_source = 'firmware_defaults_assumed'
-        self.limits_detail = 'Limits have not been applied; manual jogs use the existing firmware default fences'
+        self.limits_detail = 'Limits have not been applied; manual jogs are independent of programmed travel limits'
         self.limits_saved = False
         self._saved_profile_pending = False
         if self.limits_path and self.limits_path.exists():
@@ -239,7 +244,7 @@ class MotionController:
                     self._limits_pending('Checking saved limits against controller reset status')
                 else:
                     self.limits_source = 'saved_draft'
-                    self._limits_pending('Saved limits await explicit Apply; manual jogs use the existing firmware default fences')
+                    self._limits_pending('Saved limits await explicit Apply; manual jogs are independent of programmed travel limits')
             except (OSError, ValueError, KeyError, TypeError, MotionError) as error:
                 self._limits_pending('Saved limits could not be loaded; enter and Apply limits: '+str(error))
 
@@ -250,10 +255,18 @@ class MotionController:
         self.limits_detail = detail
 
     def _manual_limits(self):
-        # Draft values remain visible for Apply but cannot restrict manual jogs.
-        # The MCU retains its existing fences; these defaults are host checks,
-        # not a claim of firmware readback or permission to change its limits.
-        return self.soft_limits if self.limits_confirmed else SOFT_LIMITS
+        return MANUAL_LIMITS
+
+    def _bypass_program_limits(self):
+        # Explicit manual control bypasses programmed bounds in both the host
+        # and MCU. Do not change the saved profile or its acknowledgement; the
+        # automatic gateway must restore its programmed bounds before motion.
+        self._stop_command()
+        self._stable(self.clock() + STOP_SETTLE_SECONDS)
+        values = [bound for axis in ('az', 'el') for bound in MANUAL_LIMITS[axis]]
+        command = 'LIM '+' '.join('%.8f' % value for value in values)
+        if self._request(command) != ['OK LIM']:
+            raise LinkError('Manual limit bypass was not acknowledged')
 
     def _save_limits(self, payload, position, acknowledged=True):
         if self.limits_path is None:
@@ -394,8 +407,6 @@ class MotionController:
             low, high = (self.soft_limits if limits_override is None else limits_override)[axis]
             if limits_override is not None and not low <= value <= high:
                 raise MotionError(400, 'Current '+axis+' position must be inside the proposed limits')
-            if limits_override is None and self.limits_confirmed and not low - POSITION_TOLERANCE <= value <= high + POSITION_TOLERANCE:
-                self._limits_pending('Current position is outside the saved bounds; enter and Apply limits containing it')
         return result['position']
 
     def _stable(self, deadline, target=None, cancellable=True, require_disabled=None, limits_override=None):
@@ -474,6 +485,7 @@ class MotionController:
                     'position': dict(self.position) if self.position else None,
                     'limits': {'soft_limits_deg': {a: list(b) for a, b in self.soft_limits.items()},
                                'manual_soft_limits_deg': {a: list(b) for a, b in self._manual_limits().items()},
+                               'manual_ignores_program_limits': True,
                                'confirmation_required': self.limits_confirmation_required,
                                'acknowledged': self.limits_confirmed, 'readback_available': False,
                                'profile_saved': self.limits_saved, 'source': self.limits_source,
@@ -534,6 +546,7 @@ class MotionController:
                 operation['command'] = command
                 # Use the normal firmware rates, allowing both ramps and rest.
                 deadline = self.clock() + abs(effective_delta) / MAX_VELOCITY + 2 * MAX_VELOCITY / ACCELERATION + 2.0
+                self._bypass_program_limits()
                 reply = self._request(command)
                 if reply != ['OK MOV']:
                     raise LinkError('Move acknowledgement is ambiguous')
@@ -649,6 +662,7 @@ class MotionController:
                 az, el = (velocity, 0.0) if axis == 'az' else (0.0, velocity)
                 command = f'VEL {az:.8f} {el:.8f}'
                 operation['command'] = command
+                self._bypass_program_limits()
                 if self._request(command) != ['OK VEL']:
                     raise LinkError('Velocity acknowledgement is ambiguous')
                 with self.state_lock:

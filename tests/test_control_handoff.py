@@ -18,7 +18,8 @@ class Backend:
             return {'position': {'az': 10., 'el': 2.}, 'age_s': .002, 'generation': 'pi-generation'}
         return {'initialized': True, 'firmware_watchdog': True, 'connected': True,
                 'generation': 'pi-generation', 'position': {'az': 10., 'el': 2.},
-                'limits': {'acknowledged': True, 'confirmation_required': False},
+                'limits': {'acknowledged': True, 'confirmation_required': False,
+                           'soft_limits_deg': {'az': [-180., 180.], 'el': [-10., 95.]}},
                 'stop_acknowledged': True, 'stopped_step_count_confirmed': True}
     def service(self, name, start): self.calls.append(('service', name, start))
 
@@ -50,6 +51,22 @@ class HandoffTests(unittest.TestCase):
                     handoff.claim()
                 self.assertEqual(backend.calls, [('manual', '/motion', None)])
                 self.assertEqual(handoff.status()['mode'], 'manual')
+
+    def test_manual_position_outside_program_bounds_cannot_start_automatic(self):
+        from control_handoff import HandoffError
+        handoff, backend = self.make()
+        original = backend.request
+        def request(target, path, payload=None, timeout=1):
+            result = original(target, path, payload, timeout)
+            if target == 'manual' and path == '/motion':
+                result['position'] = {'az': 33., 'el': 2.}
+                result['limits']['soft_limits_deg'] = {'az': [0., 32.], 'el': [-5., 42.]}
+            return result
+        backend.request = request
+        with self.assertRaisesRegex(HandoffError, 'inside.*programmed'):
+            handoff.claim()
+        self.assertEqual(backend.calls, [('manual', '/motion', None)])
+        self.assertEqual(handoff.status()['mode'], 'manual')
     def test_manual_takeover_revokes_old_motor_and_old_release_cannot_stop_new_user_jog(self):
         from control_handoff import HandoffError
         handoff, backend = self.make()

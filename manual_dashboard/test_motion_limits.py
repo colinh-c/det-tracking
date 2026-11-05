@@ -32,6 +32,17 @@ class LimitsTests(unittest.TestCase):
         return motion.MotionController(self.board, self.clock.monotonic, self.clock.sleep,
                                        limits_path=self.path)
 
+    def test_retarget_idle_counts_before_opening_fences_on_each_manual_move(self):
+        self.apply()
+        self.controller.jog('az', .1)
+        self.board.commands.clear()
+        self.controller.jog('az', .1)
+        stop = self.board.commands.index('STOP')
+        limits = next(i for i, c in enumerate(self.board.commands) if c.startswith('LIM '))
+        move = next(i for i, c in enumerate(self.board.commands) if c.startswith('MOVR '))
+        self.assertLess(stop, limits)
+        self.assertLess(limits, move)
+
     def test_directory_flush_failure_cannot_clear_reset_marker(self):
         real_fsync = os.fsync
         def fail_directory(fd):
@@ -54,7 +65,8 @@ class LimitsTests(unittest.TestCase):
         self.assertFalse(any(c.startswith(('MOV', 'VEL', 'TRK', 'ZERO', 'SYNC', 'CLR')) for c in self.board.commands))
         self.assertIn('LIM -270.00000000 270.00000000 -30.00000000 110.00000000', self.board.commands)
         self.controller.jog('el', 100.)
-        with self.assertRaises(motion.MotionError): self.controller.jog('el', 20.)
+        self.controller.jog('el', 20.)
+        self.assertGreater(self.controller.position['el'], 110.)
     def test_invalid_busy_and_outside_position_do_not_send_lim_or_stop_user(self):
         for changes in ({'az_min': float('nan')}, {'az_min': True}, {'az_min': 1e20}, {'az_min': 300.}):
             with self.subTest(changes=changes), self.assertRaises(motion.MotionError): self.apply(**changes)
@@ -97,7 +109,12 @@ class LimitsTests(unittest.TestCase):
         return limits
 
     def assert_no_implicit_limits_or_coordinate_changes(self):
-        self.assertFalse(any(c.startswith(('LIM ', 'ZERO', 'SYNC', 'CLR')) for c in self.board.commands))
+        self.assertFalse(any(c.startswith(('ZERO', 'SYNC', 'CLR')) for c in self.board.commands))
+        bypass = [c for c in self.board.commands if c.startswith('LIM ')]
+        for command in bypass:
+            values = list(map(float, command.split()[1:]))
+            self.assertTrue(all(90000 < abs(value) < 95000 for value in values))
+            self.assertEqual([-1, 1, -1, 1], [1 if value > 0 else -1 for value in values])
 
     def test_fresh_reset_step_ignores_draft_bounds_and_journals_before_enc_zero(self):
         draft = self.write_profile(); self.board.position = [-3., 16.]
@@ -158,13 +175,43 @@ class LimitsTests(unittest.TestCase):
         self.assertFalse(any(c.startswith(('MOVR ', 'VEL ', 'LIM ')) for c in self.board.commands))
         self.assertTrue(json.loads(self.path.read_text())['acknowledged'])
 
-    def test_confirmed_bounds_still_limit_steps_and_hold(self):
-        self.apply(az_min=-1., az_max=1., el_min=-1., el_max=1.); self.board.commands.clear()
-        with self.assertRaises(motion.MotionError): self.controller.jog('az', 2.)
-        self.board.position[0] = 1.; self.controller.rest_position = {'az': 1., 'el': 0.}
-        self.controller.hold_start('confirmed-fence', 'az', .5); self.controller.hold_thread.join(2)
-        self.assertFalse(any(c.startswith(('MOVR ', 'VEL ')) for c in self.board.commands))
+    def test_confirmed_program_bounds_do_not_limit_step_or_renewed_hold(self):
+        self.apply(az_min=-1., az_max=1., el_min=-1., el_max=1.)
+        saved = self.path.read_bytes(); self.board.commands.clear()
+        result = self.controller.jog('az', 2.)
+        self.assertGreater(result['position']['az'], 1.)
+        self.assertTrue(result['limits']['acknowledged'])
+        self.assertTrue(result['limits'].get('manual_ignores_program_limits'))
+        self.assertEqual([-1., 1.], result['limits']['soft_limits_deg']['az'])
+        self.assertEqual(saved, self.path.read_bytes())
+        move_index = next(i for i,c in enumerate(self.board.commands) if c.startswith('MOVR '))
+        self.assertTrue(self.board.commands[move_index-1].startswith('LIM '))
+        request = self.board.request; renewed = []
+        def moving(command, timeout, stop=False):
+            if command == 'STAT' and self.board.mode == 3:
+                self.board.position[0] += .04
+                if not renewed:
+                    self.controller.hold_renew('past-program-bound'); renewed.append(True)
+            return request(command, timeout, stop)
+        self.board.request = moving
+        self.controller.hold_start('past-program-bound', 'az', 1.)
+        self.controller.hold_thread.join(2)
+        self.assertFalse(self.controller.hold_thread.is_alive())
+        self.assertEqual([True], renewed)
+        self.assertGreater(self.controller.position['az'], 2.5)
+        velocity_index = next(i for i,c in enumerate(self.board.commands) if c.startswith('VEL '))
+        self.assertTrue(self.board.commands[velocity_index-1].startswith('LIM '))
+        self.assertEqual(saved, self.path.read_bytes())
         self.assertTrue(self.controller.status()['limits']['acknowledged'])
+        self.assertEqual('lease_expired', self.controller.status()['last_hold_reason'])
+        self.assert_no_implicit_limits_or_coordinate_changes()
+
+    def test_idle_status_does_not_bypass_and_apply_sends_only_program_limits(self):
+        self.controller.status(refresh=True)
+        self.assertFalse(any(c.startswith('LIM ') for c in self.board.commands))
+        self.apply(az_min=-1., az_max=1., el_min=-1., el_max=1.)
+        self.assertEqual(['LIM -1.00000000 1.00000000 -1.00000000 1.00000000'],
+                         [c for c in self.board.commands if c.startswith('LIM ')])
 
     def test_unconfirmed_profile_does_not_bypass_driver_or_controller_fault(self):
         for kind in ('controller', 'driver'):

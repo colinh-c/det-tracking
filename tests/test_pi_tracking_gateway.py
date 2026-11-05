@@ -52,6 +52,7 @@ class FakeLink:
                 return ['OK ENC 0']
             if command == 'MODE SLEW': return ['OK MODE 16 VMAX 15.000']
             if command == 'ACC 75': return ['OK ACC 75.00']
+            if command.startswith('LIM '): return ['OK LIM']
             if command.startswith('LVEL '):
                 self.velocity_entered.set()
                 if self.velocity_release is not None:

@@ -1,0 +1,922 @@
+{
+  "schema_version": 1,
+  "source": {
+    "path": "OpenRocket Designs IREC 1.13 Oct 26.ork",
+    "sha256": "360edcbcf189213074ca7f98f07471df02b31accb24d8e0c6513368777c2420d",
+    "archive_member": "rocket.ork",
+    "creator": "OpenRocket 24.12",
+    "format_version": "1.10",
+    "simulation_executed": false
+  },
+  "selection": {
+    "config_id": "08d953ea-7ebf-4a26-aa78-1e8bdb063b6e",
+    "simulation_name": "Simulation 3",
+    "saved_status": "uptodate",
+    "branch_name": "Sustainer",
+    "is_saved_default": true,
+    "motors": [
+      {
+        "type": "reload",
+        "manufacturer": "AeroTech",
+        "digest": "2a2c010e2811015043d13e9a2a9d327d",
+        "designation": "M2500T",
+        "diameter": "0.098",
+        "length": "0.751",
+        "delay": "none"
+      }
+    ],
+    "assumption": "Use the saved default configuration and matching up-to-date simulation unless explicitly overridden; actual flight configuration remains user-controlled."
+  },
+  "configurations": [
+    {
+      "config_id": "fff175d3-edcd-4cb4-af4e-b0df8333bcb9",
+      "default": false,
+      "stages": [
+        {
+          "number": "0",
+          "active": "true"
+        }
+      ],
+      "motors": [
+        {
+          "type": "reload",
+          "manufacturer": "AeroTech",
+          "digest": "1a6cb521e4b6172a20589a60a0fbe6f1",
+          "designation": "M1939W",
+          "diameter": "0.098",
+          "length": "0.732",
+          "delay": "none"
+        }
+      ]
+    },
+    {
+      "config_id": "0471aa4d-8970-4f90-9e79-901c7ca02146",
+      "default": false,
+      "stages": [
+        {
+          "number": "0",
+          "active": "true"
+        }
+      ],
+      "motors": [
+        {
+          "type": "reload",
+          "manufacturer": "AeroTech",
+          "digest": "9cf5d506b5d029e4a4c09a11490348a7",
+          "designation": "M4500ST",
+          "diameter": "0.098",
+          "length": "0.597",
+          "delay": "none"
+        }
+      ]
+    },
+    {
+      "config_id": "08d953ea-7ebf-4a26-aa78-1e8bdb063b6e",
+      "default": true,
+      "stages": [
+        {
+          "number": "0",
+          "active": "true"
+        }
+      ],
+      "motors": [
+        {
+          "type": "reload",
+          "manufacturer": "AeroTech",
+          "digest": "2a2c010e2811015043d13e9a2a9d327d",
+          "designation": "M2500T",
+          "diameter": "0.098",
+          "length": "0.751",
+          "delay": "none"
+        }
+      ]
+    },
+    {
+      "config_id": "d7e10cc3-8f58-4518-8d83-9526859de67e",
+      "default": false,
+      "stages": [
+        {
+          "number": "0",
+          "active": "true"
+        }
+      ],
+      "motors": [
+        {
+          "type": "reload",
+          "manufacturer": "Cesaroni Technology",
+          "digest": "d3d41018a35b4db06b8d1efa7452037e",
+          "designation": "9870M1800-P",
+          "diameter": "0.098",
+          "length": "0.702",
+          "delay": "0.0"
+        }
+      ]
+    }
+  ],
+  "saved_simulations": [
+    {
+      "name": "Simulation 1",
+      "saved_status": "outdated",
+      "config_id": "fff175d3-edcd-4cb4-af4e-b0df8333bcb9",
+      "summary": {
+        "maxaltitude": "3669.637",
+        "maxvelocity": "330.951",
+        "maxacceleration": "87.126",
+        "maxmach": "0.997",
+        "timetoapogee": "26.045",
+        "flighttime": "143.152",
+        "groundhitvelocity": "6.275",
+        "launchrodvelocity": "27.323",
+        "deploymentvelocity": "36.867",
+        "optimumdelay": "19.095"
+      }
+    },
+    {
+      "name": "Simulation 2",
+      "saved_status": "outdated",
+      "config_id": "0471aa4d-8970-4f90-9e79-901c7ca02146",
+      "summary": {
+        "maxaltitude": "2641.778",
+        "maxvelocity": "304.5",
+        "maxacceleration": "239.893",
+        "maxmach": "0.897",
+        "timetoapogee": "21.623",
+        "flighttime": "108.703",
+        "groundhitvelocity": "6.517",
+        "launchrodvelocity": "48.583",
+        "deploymentvelocity": "38.845",
+        "optimumdelay": "19.982"
+      }
+    },
+    {
+      "name": "Simulation 3",
+      "saved_status": "uptodate",
+      "config_id": "08d953ea-7ebf-4a26-aa78-1e8bdb063b6e",
+      "summary": {
+        "maxaltitude": "3520.328",
+        "maxvelocity": "343.521",
+        "maxacceleration": "111.683",
+        "maxmach": "1.017",
+        "timetoapogee": "25.514",
+        "flighttime": "139.738",
+        "groundhitvelocity": "6.56",
+        "launchrodvelocity": "33.289",
+        "deploymentvelocity": "37.398",
+        "optimumdelay": "21.25"
+      }
+    },
+    {
+      "name": "Simulation 4",
+      "saved_status": "outdated",
+      "config_id": "d7e10cc3-8f58-4518-8d83-9526859de67e",
+      "summary": {
+        "maxaltitude": "3549.973",
+        "maxvelocity": "337.874",
+        "maxacceleration": "83.74",
+        "maxmach": "1.004",
+        "timetoapogee": "25.6",
+        "flighttime": "144.184",
+        "groundhitvelocity": "6.012",
+        "launchrodvelocity": "28.506",
+        "deploymentvelocity": "35.818",
+        "optimumdelay": "20.05"
+      }
+    }
+  ],
+  "selected_summary": {
+    "maxaltitude": "3520.328",
+    "maxvelocity": "343.521",
+    "maxacceleration": "111.683",
+    "maxmach": "1.017",
+    "timetoapogee": "25.514",
+    "flighttime": "139.738",
+    "groundhitvelocity": "6.56",
+    "launchrodvelocity": "33.289",
+    "deploymentvelocity": "37.398",
+    "optimumdelay": "21.25"
+  },
+  "conditions": {
+    "original_scalar_values": {
+      "configid": "08d953ea-7ebf-4a26-aa78-1e8bdb063b6e",
+      "launchrodlength": "5.1816",
+      "launchintowind": "true",
+      "launchrodangle": "0.0",
+      "launchroddirection": "90.0",
+      "windaverage": "2.0",
+      "windturbulence": "0.1",
+      "winddirection": "1.5707963267948966",
+      "windmodeltype": "Average",
+      "launchaltitude": "0.0",
+      "launchlatitude": "28.61",
+      "launchlongitude": "-80.6",
+      "geodeticmethod": "spherical",
+      "atmosphere": "",
+      "timestep": "0.05",
+      "maxtime": "1200.0"
+    },
+    "units": {
+      "launchrodlength": "m",
+      "launchrodangle": "deg from vertical",
+      "launchroddirection": "deg, OpenRocket launch bearing",
+      "windaverage": "m/s",
+      "windturbulence": "dimensionless",
+      "winddirection": "rad",
+      "launchaltitude": "m above sea level",
+      "launchlatitude": "deg",
+      "launchlongitude": "deg",
+      "timestep": "s",
+      "maxtime": "s"
+    },
+    "wind_models": [
+      {
+        "tag": "wind",
+        "attributes": {
+          "model": "average"
+        },
+        "text": "",
+        "children": [
+          {
+            "tag": "speed",
+            "attributes": {},
+            "text": "2.0",
+            "children": []
+          },
+          {
+            "tag": "direction",
+            "attributes": {},
+            "text": "1.5707963267948966",
+            "children": []
+          },
+          {
+            "tag": "standarddeviation",
+            "attributes": {},
+            "text": "0.2",
+            "children": []
+          }
+        ]
+      },
+      {
+        "tag": "wind",
+        "attributes": {
+          "model": "multilevel",
+          "altituderef": "msl"
+        },
+        "text": "",
+        "children": [
+          {
+            "tag": "windlevel",
+            "attributes": {
+              "altitude": "0.0",
+              "speed": "2.0",
+              "direction": "1.5707963267948966",
+              "standarddeviation": "0.2"
+            },
+            "text": "",
+            "children": []
+          }
+        ]
+      }
+    ],
+    "atmosphere": {
+      "model": "isa"
+    },
+    "is_confirmed_launch_day_configuration": false
+  },
+  "geometry": {
+    "outer_component_length_sum_m": 2.4515999999999996,
+    "maximum_outer_body_diameter_m": 0.156718,
+    "outer_components": [
+      {
+        "type": "nosecone",
+        "name": "Nose Cone",
+        "id": "d1dcb015-a5a8-4351-bfae-c6ed953d0879",
+        "overridemass": "0.988",
+        "overridesubcomponentsmass": "false",
+        "comment": "Weighed on scale; unpainted.\nSubtracting approximate mass of straight section\n\nRegular paint bc no vinyl wrap",
+        "finish": "normal",
+        "material": "Fiberglass",
+        "length": "0.75",
+        "thickness": "0.002",
+        "shape": "ogive",
+        "shapeparameter": "1.0",
+        "aftradius": "0.078359",
+        "aftshoulderradius": "0.0",
+        "aftshoulderlength": "0.0",
+        "aftshoulderthickness": "0.0",
+        "aftshouldercapped": "false",
+        "isflipped": "false"
+      },
+      {
+        "type": "bodytube",
+        "name": "Nosecone Straight Section",
+        "id": "cae26617-707f-4f71-beee-77f400d783a3",
+        "overridemass": "0.6",
+        "overridesubcomponentsmass": "false",
+        "finish": "normal",
+        "material": "Carbon fiber",
+        "length": "0.076",
+        "thickness": "0.002",
+        "radius": "auto 0.078359"
+      },
+      {
+        "type": "bodytube",
+        "name": "Nosecone Straight Section",
+        "id": "98a27cc4-ef2e-44d9-9e7f-b52afeced64d",
+        "overridemass": "0.705",
+        "overridesubcomponentsmass": "false",
+        "comment": "The rest of the 3534g main airframe",
+        "finish": "normal",
+        "material": "Carbon fiber",
+        "length": "0.30479999999999996",
+        "thickness": "0.0021000000000000046",
+        "radius": "0.07830000000000001"
+      },
+      {
+        "type": "bodytube",
+        "name": "Switchband",
+        "id": "a15c4d40-ebab-4462-8ca4-235e0cf2299a",
+        "finish": "smooth",
+        "material": "Fiberglass",
+        "length": "0.1016",
+        "thickness": "0.002159",
+        "radius": "auto 0.07830000000000001"
+      },
+      {
+        "type": "bodytube",
+        "name": "Main Airframe",
+        "id": "a019e4dc-0765-433c-90d8-f3d400ea803f",
+        "overridemass": "2.829",
+        "overridesubcomponentsmass": "false",
+        "comment": "3534g total (60\")\n23.19g per cm",
+        "finish": "smooth",
+        "material": "Fiberglass",
+        "length": "1.2191999999999998",
+        "thickness": "0.0020999999999999908",
+        "radius": "0.0783"
+      }
+    ],
+    "fin_sets": [
+      {
+        "name": "Trapezoidal Fin Set",
+        "id": "0f83e4f7-22db-4903-ab5f-03b148290617",
+        "instancecount": "4",
+        "fincount": "4",
+        "radiusoffset": "0.0",
+        "angleoffset": "0.0",
+        "rotation": "0.0",
+        "axialoffset": "0.0",
+        "position": "0.0",
+        "overridemass": "2.5",
+        "overridesubcomponentsmass": "false",
+        "comment": "Average thickness 6.3 mm +/- 0.2 mm.",
+        "finish": "normal",
+        "material": "Fiberglass",
+        "thickness": "0.0063",
+        "crosssection": "rounded",
+        "cant": "0.0",
+        "tabheight": "0.027358999999999994",
+        "tablength": "0.25",
+        "tabposition": "0.0",
+        "filletradius": "0.01",
+        "filletmaterial": "Fiberglass",
+        "rootchord": "0.3",
+        "tipchord": "0.1",
+        "sweeplength": "0.17",
+        "height": "0.16"
+      }
+    ],
+    "note": "Length is the sum of this design's sequential outer components; earlier user length was approximate 2.75 m. Confirm as-flown geometry before interpreting physical image scale."
+  },
+  "mass_and_cg": {
+    "launch_mass_kg": 24.556,
+    "post_burn_mass_kg": 19.897,
+    "launch_motor_mass_kg": 8.064,
+    "spent_motor_mass_kg": 3.405,
+    "launch_cg_location_m": 1.638,
+    "post_burn_cg_location_m": 1.536,
+    "post_burn_value_policy": "Last available finite value in the saved trajectory; NaNs in CSV remain unchanged.",
+    "cg_reference": "Original OpenRocket axial CG coordinate; no inference of suspended assembly geometry."
+  },
+  "internal_payload_components": [
+    {
+      "name": "Payload",
+      "id": "a8f5aad1-fe21-4d68-b9e9-8d10be5a4947",
+      "color": "",
+      "linestyle": "dashed",
+      "axialoffset": "-0.06000000000000004",
+      "position": "-0.06000000000000004",
+      "packedlength": "0.1",
+      "packedradius": "0.05",
+      "radialposition": "0.0",
+      "radialdirection": "0.0",
+      "mass": "2.0",
+      "masscomponenttype": "payload"
+    }
+  ],
+  "recovery": [
+    {
+      "id": "ab8a93ac-b877-4b61-a942-19c0524367f0",
+      "name": "Main Parachute",
+      "diameter_m": 2.1336,
+      "cd": "2.2",
+      "deployment_event": "altitude",
+      "deployment_altitude_m": 200.0,
+      "deployment_delay_s": 0.0,
+      "source_values": {
+        "name": "Main Parachute",
+        "id": "ab8a93ac-b877-4b61-a942-19c0524367f0",
+        "axialoffset": "0.7000000000000001",
+        "position": "0.7000000000000001",
+        "overridemass": "0.5",
+        "overridesubcomponentsmass": "false",
+        "packedlength": "0.254",
+        "packedradius": "0.06",
+        "radialposition": "0.0",
+        "radialdirection": "0.0",
+        "cd": "2.2",
+        "material": "Ripstop nylon",
+        "deployevent": "altitude",
+        "deployaltitude": "200.0",
+        "deploydelay": "0.0",
+        "diameter": "2.1336",
+        "linecount": "6",
+        "linelength": "0.3",
+        "linematerial": "Elastic cord (round 2 mm, 1/16 in)"
+      }
+    },
+    {
+      "id": "5715dc66-4445-4207-b4f4-d9571827d627",
+      "name": "Drogue Parachute",
+      "diameter_m": 0.61,
+      "cd": "auto",
+      "deployment_event": "apogee",
+      "deployment_altitude_m": 200.0,
+      "deployment_delay_s": 0.0,
+      "source_values": {
+        "name": "Drogue Parachute",
+        "id": "5715dc66-4445-4207-b4f4-d9571827d627",
+        "axialoffset": "0.04",
+        "position": "0.04",
+        "overridemass": "0.5",
+        "overridesubcomponentsmass": "false",
+        "packedlength": "0.16",
+        "packedradius": "0.07",
+        "radialposition": "0.0",
+        "radialdirection": "0.0",
+        "cd": "auto",
+        "material": "Ripstop nylon",
+        "deployevent": "apogee",
+        "deployaltitude": "200.0",
+        "deploydelay": "0.0",
+        "diameter": "0.61",
+        "linecount": "6",
+        "linelength": "0.3",
+        "linematerial": "Elastic cord (round 2 mm, 1/16 in)"
+      }
+    }
+  ],
+  "shock_cords": [
+    {
+      "name": "Main shock cord",
+      "id": "54828feb-ca86-4b5f-afe1-11883dde93cd",
+      "axialoffset": "-0.17",
+      "position": "-0.17",
+      "overridemass": "0.12",
+      "overridesubcomponentsmass": "false",
+      "packedlength": "0.08",
+      "packedradius": "0.05",
+      "radialposition": "0.0",
+      "radialdirection": "0.0",
+      "cordlength": "2.0",
+      "material": "Kevlar 12-strand (10 mm, 3/8 in)"
+    },
+    {
+      "name": "Shock cord",
+      "id": "5b8d713c-b536-406a-8b61-1dc7533fea9a",
+      "axialoffset": "0.0",
+      "position": "0.0",
+      "overridemass": "0.12",
+      "overridesubcomponentsmass": "false",
+      "packedlength": "0.04",
+      "packedradius": "0.07",
+      "radialposition": "0.0",
+      "radialdirection": "0.0",
+      "cordlength": "2.0",
+      "material": "Kevlar 12-strand (10 mm, 3/8 in)"
+    }
+  ],
+  "events": [
+    {
+      "time": "0",
+      "type": "launch",
+      "id": "da5367d7-9cd2-4f88-b39d-3a87d3920da0",
+      "source": "58cc45ef-ebfb-40f5-923f-dee8a3ef366f",
+      "time_s": 0.0
+    },
+    {
+      "time": "0",
+      "type": "ignition",
+      "id": "87f607bd-9093-4fef-8a2b-650876bfeeb4",
+      "source": "4d2d4b8d-f4d7-4c02-b395-c4286d785991",
+      "time_s": 0.0
+    },
+    {
+      "time": "0.06",
+      "type": "liftoff",
+      "id": "20656f19-0e9c-4b90-b269-b98c8b427ef4",
+      "time_s": 0.06
+    },
+    {
+      "time": "0.369",
+      "type": "launchrod",
+      "id": "228e7ec4-445d-496d-8c76-e22828c3738d",
+      "time_s": 0.369
+    },
+    {
+      "time": "4.264",
+      "type": "burnout",
+      "id": "6a58dd30-569b-4910-b559-dd32a903cc63",
+      "source": "4d2d4b8d-f4d7-4c02-b395-c4286d785991",
+      "time_s": 4.264
+    },
+    {
+      "time": "25.514",
+      "type": "apogee",
+      "id": "5dedf05e-6cad-4934-b426-491aecabc84a",
+      "source": "58cc45ef-ebfb-40f5-923f-dee8a3ef366f",
+      "time_s": 25.514
+    },
+    {
+      "time": "25.515",
+      "type": "recoverydevicedeployment",
+      "id": "7a344cf8-011a-4322-8c6a-bbfed5ac02ae",
+      "source": "5715dc66-4445-4207-b4f4-d9571827d627",
+      "time_s": 25.515
+    },
+    {
+      "time": "110.877",
+      "type": "simwarn",
+      "id": "be36f962-da57-48e8-a366-9b62fef82533",
+      "warnid": "b429073c-1aa9-4a1b-9ad2-b9357f57604a",
+      "time_s": 110.877
+    },
+    {
+      "time": "110.877",
+      "type": "recoverydevicedeployment",
+      "id": "9acf4556-ea44-47e4-9b4c-dd7e8cd0f779",
+      "source": "ab8a93ac-b877-4b61-a942-19c0524367f0",
+      "time_s": 110.877
+    },
+    {
+      "time": "139.738",
+      "type": "groundhit",
+      "id": "c9dfddeb-255b-4e43-8507-aeb6b5fdeca2",
+      "time_s": 139.738
+    },
+    {
+      "time": "139.738",
+      "type": "simulationend",
+      "id": "c66835d2-a67b-47a1-aa63-69b3667dd92f",
+      "time_s": 139.738
+    }
+  ],
+  "warnings": [
+    {
+      "type": "HighSpeedDeployment",
+      "id": "b429073c-1aa9-4a1b-9ad2-b9357f57604a",
+      "description": "Recovery device deployment at high speed (83.7 mph)",
+      "priority": "NORMAL",
+      "source": "ab8a93ac-b877-4b61-a942-19c0524367f0",
+      "parameter": "37.397630570431566"
+    }
+  ],
+  "tracking_windows": {
+    "apogee_time_s": 25.514,
+    "main_deployment_time_s": 110.877,
+    "ground_hit_time_s": 139.738,
+    "main_to_ground_s": 28.861000000000004,
+    "apogee_to_ground_s": 114.224,
+    "nearest_main_event_sample": {
+      "Time": 110.877,
+      "Altitude": 186.108,
+      "Total velocity": 37.398
+    }
+  },
+  "trajectory": {
+    "file": "openrocket_trajectory.csv",
+    "point_count": 888,
+    "column_count": 58,
+    "fields": [
+      {
+        "name": "Time",
+        "unit": "s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Altitude",
+        "unit": "m",
+        "meaning": "Altitude relative to the launch level."
+      },
+      {
+        "name": "Altitude above sea level",
+        "unit": "m",
+        "meaning": "Saved altitude above sea level."
+      },
+      {
+        "name": "Vertical velocity",
+        "unit": "m/s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Total velocity",
+        "unit": "m/s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Vertical acceleration",
+        "unit": "m/s^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Total acceleration",
+        "unit": "m/s^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Position East of launch",
+        "unit": "m",
+        "meaning": "East displacement from launch, as explicitly named in the archive."
+      },
+      {
+        "name": "Position North of launch",
+        "unit": "m",
+        "meaning": "North displacement from launch, as explicitly named in the archive."
+      },
+      {
+        "name": "Lateral distance",
+        "unit": "m",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Lateral direction",
+        "unit": "rad",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Lateral velocity",
+        "unit": "m/s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Lateral acceleration",
+        "unit": "m/s^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Latitude",
+        "unit": "deg",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Longitude",
+        "unit": "deg",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Angle of attack",
+        "unit": "rad",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Roll rate",
+        "unit": "rad/s",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Pitch rate",
+        "unit": "rad/s",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Yaw rate",
+        "unit": "rad/s",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Vertical orientation (zenith)",
+        "unit": "rad",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Lateral orientation (azimuth)",
+        "unit": "rad",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Mass",
+        "unit": "kg",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Motor mass",
+        "unit": "kg",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Longitudinal moment of inertia",
+        "unit": "kg*m^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Rotational moment of inertia",
+        "unit": "kg*m^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Gravitational acceleration",
+        "unit": "m/s^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "CP location",
+        "unit": "m",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "CG location",
+        "unit": "m",
+        "meaning": "Raw OpenRocket axial CG location; no suspended-body geometry is inferred."
+      },
+      {
+        "name": "Stability margin calibers",
+        "unit": "calibers",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Thrust",
+        "unit": "N",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Thrust-to-weight ratio",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Drag force",
+        "unit": "N",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Drag coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Friction drag coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Pressure drag coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Base drag coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Axial drag coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Normal force coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Pitch moment coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Yaw moment coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Side force coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Roll moment coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Roll forcing coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Roll damping coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Pitch damping coefficient",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Wind velocity",
+        "unit": "m/s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Wind direction",
+        "unit": "rad",
+        "meaning": "Original OpenRocket field, unchanged.",
+        "angle_convention": "Preserved OpenRocket convention; no bearing, zenith, elevation, or camera transform applied."
+      },
+      {
+        "name": "Air temperature",
+        "unit": "K",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Air pressure",
+        "unit": "Pa",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Air density",
+        "unit": "kg/m^3",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Speed of sound",
+        "unit": "m/s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Mach number",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Reynolds number",
+        "unit": "dimensionless",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Reference length",
+        "unit": "m",
+        "meaning": "Aerodynamic reference length, not total rocket length."
+      },
+      {
+        "name": "Reference area",
+        "unit": "m^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Simulation time step",
+        "unit": "s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Computation time",
+        "unit": "s",
+        "meaning": "Original OpenRocket field, unchanged."
+      },
+      {
+        "name": "Coriolis acceleration",
+        "unit": "m/s^2",
+        "meaning": "Original OpenRocket field, unchanged."
+      }
+    ],
+    "time_range_s": [
+      0.0,
+      139.738
+    ],
+    "sample_interval_range_s": [
+      0.000999999999990564,
+      0.5000000000000071
+    ],
+    "nan_policy": "Original NaN strings are retained as unavailable data, never replaced by zero.",
+    "camera_offset_applied": false,
+    "coordinate_policy": "Original named launch-relative East/North/Altitude columns are unchanged. No camera position, rotation, orientation convention conversion, resampling, or interpolation is applied."
+  },
+  "validation_status": "Saved simulation data only; not observed flight or physical tracking validation."
+}

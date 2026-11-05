@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "launch_date": "2026-11-07",
+  "field_config": "field_config.json",
+  "trajectory": "openrocket_trajectory.csv",
+  "flight_configuration_confirmed": false,
+  "camera_base_url": "http://127.0.0.1:18082",
+  "motor_base_url": "http://127.0.0.1:18084",
+  "cameras": {
+    "narrow": {
+      "width": 1456,
+      "height": 1088,
+      "fx": 115939.61583750001,
+      "fy": 115514.9286,
+      "cx": 727.5,
+      "cy": 543.5,
+      "calibrated": false
+    },
+    "wide": {
+      "width": 1456,
+      "height": 1088,
+      "fx": 4637.5846335,
+      "fy": 4620.597144,
+      "cx": 727.5,
+      "cy": 543.5,
+      "calibrated": false
+    }
+  },
+  "calibration": {
+    "status": "nominal_native_unverified",
+    "reference": "",
+    "notes": "Native CSI capture is 1456x1088. Nominal intrinsics are scaled from the 640x480 simulation profile using separate x/y scale and pixel-center alignment, not measured calibration. 400 mm assumed narrow, 16 mm wide placeholder. Physical lens assignment, boresight, roll and distortion remain unverified; final star and axis calibration is required."
+  },
+  "encoders": {
+    "calibrated": false,
+    "allow_legacy_gateway": true,
+    "max_age_s": 0.3,
+    "camera_indices": {
+      "narrow": 0,
+      "wide": 1
+    },
+    "az": {
+      "bus": 1,
+      "zero_deg": 0,
+      "offset_deg": 0,
+      "sign": 1
+    },
+    "el": {
+      "bus": 3,
+      "zero_deg": 0,
+      "offset_deg": 0,
+      "sign": 1
+    },
+    "mapping_status": "unverified",
+    "camera_indices_status": "unverified_lens_assignment",
+    "notes": "Bus 1 to azimuth and bus 3 to elevation are provisional labels only. Axis assignment, signs, zeros and offsets are not measured. Camera index 0 narrow and index 1 wide are provisional lens assignments. Explicit legacy-gateway preview exception: the currently deployed capture gateway has no process-generation header, so images may be displayed but generation_verified remains false and all poses remain invalid. Tracker alignment is unavailable in legacy preview. This exception does not enable automatic movement."
+  },
+  "perception": {
+    "max_frame_age_s": 0.5,
+    "max_pose_age_s": 0.5,
+    "cg_fraction_from_nose": 0.62653
+  },
+  "predictor": {},
+  "executor": {
+    "max_speed_deg_s": 15.0,
+    "max_accel_deg_s2": 75.0
+  },
+  "latency_s": 0.1,
+  "payload_deployment_enabled": false,
+  "motor_timeout_s": 0.05,
+  "live_profile_notes": "Read-only Mac live display via separately established SSH forwarding: Mac 18082 to Pi 8082. Mac 18084 to future Pi 8084 is reserved for the leased tracking gateway, not the existing manual motion proxy. This profile and its launcher do not establish tunnels, open a browser, or enable automatic movement."
+}

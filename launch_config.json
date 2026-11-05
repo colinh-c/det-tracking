@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "launch_date": "2026-11-07",
+  "field_config": "field_config.json",
+  "trajectory": "openrocket_trajectory.csv",
+  "flight_configuration_confirmed": false,
+  "camera_base_url": "http://127.0.0.1:8082",
+  "motor_base_url": "http://127.0.0.1:8084",
+  "cameras": {
+    "narrow": {
+      "width": 640,
+      "height": 480,
+      "fx": 50962.4685,
+      "fy": 50962.4685,
+      "cx": 319.5,
+      "cy": 239.5,
+      "calibrated": false
+    },
+    "wide": {
+      "width": 640,
+      "height": 480,
+      "fx": 2038.49874,
+      "fy": 2038.49874,
+      "cx": 319.5,
+      "cy": 239.5,
+      "calibrated": false
+    }
+  },
+  "calibration": {
+    "status": "nominal_for_simulation",
+    "reference": "",
+    "notes": "400 mm narrow, 16 mm wide placeholder; pixel dimensions and all intrinsics must match final camera capture. Fill calibrated boresight and roll offsets after star and axis calibration."
+  },
+  "encoders": {
+    "calibrated": false,
+    "max_age_s": 0.3,
+    "camera_indices": {
+      "narrow": 0,
+      "wide": 1
+    },
+    "az": {
+      "bus": 1,
+      "zero_deg": 0,
+      "offset_deg": 0,
+      "sign": 1
+    },
+    "el": {
+      "bus": 3,
+      "zero_deg": 0,
+      "offset_deg": 0,
+      "sign": 1
+    }
+  },
+  "perception": {
+    "max_frame_age_s": 0.5,
+    "max_pose_age_s": 0.5,
+    "cg_fraction_from_nose": 0.62653
+  },
+  "predictor": {},
+  "executor": {
+    "max_speed_deg_s": 15.0,
+    "max_accel_deg_s2": 75.0
+  },
+  "latency_s": 0.1,
+  "payload_deployment_enabled": false,
+  "motor_timeout_s": 0.05
+}

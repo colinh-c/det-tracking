@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DET field setup</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f5f2;color:#1d2923;font:16px system-ui,sans-serif}main{max-width:900px;margin:auto;padding:32px 22px 48px}h1{font-size:30px;margin:0 0 8px}h2{font-size:19px;margin:0 0 14px}p{line-height:1.5}.intro{max-width:730px;color:#536158}.card{margin-top:22px;padding:22px;background:white;border:1px solid #d3dcd3;border-radius:12px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.badge{font-size:13px;background:#fff0c5;padding:7px 12px;border-radius:18px}.row{display:grid;grid-template-columns:minmax(220px,1fr) 145px 180px;gap:14px;align-items:center;padding:15px 0;border-bottom:1px solid #e5e9e3}.row:last-child{border-bottom:0}.row small{display:block;color:#66736b;line-height:1.4;margin-top:4px}input,select,textarea,button{font:inherit;border:1px solid #a9b8ad;border-radius:6px;padding:10px;background:white;color:inherit}input,select{width:100%}button{cursor:pointer;background:#245c3d;color:white;border-color:#245c3d}button.secondary{background:#fff;color:#245c3d}button:hover{filter:brightness(.95)}textarea{width:100%;min-height:90px;resize:vertical}.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions label{flex:1;min-width:220px}input[type=file]{max-width:100%}.hint{font-size:13px;color:#536158}code,pre{font:13px ui-monospace,monospace;background:#eef2ed;border-radius:6px;overflow-wrap:anywhere;white-space:pre-wrap}pre{padding:14px;line-height:1.5}#message{min-height:24px;margin:14px 0 0}#message.error{color:#a02e2e}#preview{font-size:14px;line-height:1.6}.status-label{font-size:12px;color:#536158}#sourceLabel{overflow-wrap:anywhere}@media(max-width:650px){main{padding:22px 14px}.card{padding:16px}.row{grid-template-columns:1fr 1fr}.row>label{grid-column:1/-1}.row input,.row select{min-width:0}.top{align-items:flex-start}}
+</style></head><body><main>
+<div class="top"><div><h1>DET field setup</h1><div class="intro">Edit the tracker-to-pad geometry and rail direction measured at the field.</div></div><span class="badge" id="setupStatus">Nominal / unmeasured</span></div>
+<p class="intro">Bearings are degrees clockwise from <strong>true North</strong>: North 0°, East 90°, South 180°, West 270°. Height is relative to the tracker; a negative value means the pad is lower. This file is a geometry foundation for Mac tracking work, not a flight-ready tracking system or a calibration result.</p>
+<section class="card" aria-labelledby="loadHeading"><h2 id="loadHeading">Load a configuration</h2><label for="configFile">Select a saved JSON file</label><input id="configFile" type="file" accept=".json,application/json"><p class="hint" id="sourceLabel">Using embedded nominal defaults. No file has been read from disk.</p><button type="button" class="secondary" id="resetDefaults">Use nominal defaults</button></section>
+<form id="setupForm" novalidate>
+<section class="card" aria-labelledby="geometryHeading"><h2 id="geometryHeading">Site geometry</h2><p class="hint">Each value keeps its own status. Editing a number does not mark it measured automatically. Distance, pad bearing and height change the pad position relative to the tracker. Rail settings do not recalculate saved OpenRocket flight physics; use an updated simulation after substantial rail or wind changes.</p>
+<div class="row"><label for="pad_horizontal_distance_m">Horizontal distance to pad (m)<small>Ground-plane separation, not slant range.</small></label><input id="pad_horizontal_distance_m" type="number" value="500" min="0" step="any" required><select id="pad_horizontal_distance_m_status" aria-label="Distance measurement status"><option value="nominal">Nominal / unmeasured</option><option value="measured">Measured on site</option></select></div>
+<div class="row"><label for="pad_bearing_deg">Pad bearing from tracker (°)<small>Clockwise from true North. Headings wrap at 360°.</small></label><input id="pad_bearing_deg" type="number" value="0" step="any" required><select id="pad_bearing_deg_status" aria-label="Pad bearing measurement status"><option value="nominal">Nominal / unmeasured</option><option value="measured">Measured on site</option></select></div>
+<div class="row"><label for="pad_height_relative_to_tracker_m">Pad height relative to tracker (m)<small>Positive above, negative below.</small></label><input id="pad_height_relative_to_tracker_m" type="number" value="0" step="any" required><select id="pad_height_relative_to_tracker_m_status" aria-label="Pad height measurement status"><option value="nominal">Nominal / unmeasured</option><option value="measured">Measured on site</option></select></div>
+<div class="row"><label for="rail_tilt_from_vertical_deg">Rail tilt from vertical (°)<small>0° points up; 90° is horizontal; 180° points down.</small></label><input id="rail_tilt_from_vertical_deg" type="number" value="0" min="0" max="180" step="any" required><select id="rail_tilt_from_vertical_deg_status" aria-label="Rail tilt measurement status"><option value="nominal">Nominal / unmeasured</option><option value="measured">Measured on site</option></select></div>
+<div class="row"><label for="rail_bearing_deg">Rail bearing (°)<small>Direction the rail leans toward, clockwise from true North. Unused when exactly vertical.</small></label><input id="rail_bearing_deg" type="number" value="0" step="any" required><select id="rail_bearing_deg_status" aria-label="Rail bearing measurement status"><option value="nominal">Nominal / unmeasured</option><option value="measured">Measured on site</option></select></div>
+<p><label for="notes">Field notes</label></p><textarea id="notes"></textarea>
+<div id="preview" aria-live="polite"></div>
+</section>
+<section class="card" aria-labelledby="exportHeading"><h2 id="exportHeading">Export for the loader</h2><div class="actions"><label for="exportFilename">JSON filename<input id="exportFilename" value="field_config.json" spellcheck="false"></label><button type="submit" id="exportConfig">Download JSON</button></div><p id="message" role="status"></p>
+<p class="hint">This offline page reads only the file you select and downloads a new JSON file. It does not overwrite the project configuration or connect to hardware.</p>
+<details><summary>Use the saved file with local tools</summary>
+<p class="hint">Loader folder: <code>repository root</code></p>
+<p class="hint">From that folder, inspect any exported configuration with its actual file path:</p><pre>python3 field_config.py --config /path/to/field_config.json</pre>
+<p class="hint">To replace the project configuration, use this import command with the downloaded file's path. The loader backs up the existing file before replacing it:</p><pre>python3 field_config.py --config field_config.json --import-json /path/to/downloaded/field_config.json</pre>
+</details>
+</section></form>
+</main>
+<script id="defaultConfig" type="application/json">{"schema_version":1,"coordinate_frame":"ENU","heading_reference":"true_north_clockwise","geometry":{"pad_horizontal_distance_m":500,"pad_bearing_deg":0,"pad_height_relative_to_tracker_m":0,"rail_tilt_from_vertical_deg":0,"rail_bearing_deg":0},"measurement_status":{"pad_horizontal_distance_m":"nominal","pad_bearing_deg":"nominal","pad_height_relative_to_tracker_m":"nominal","rail_tilt_from_vertical_deg":"nominal","rail_bearing_deg":"nominal"},"notes":"Nominal, unmeasured setup. Replace with on-site measurements before relying on geometry."}</script>
+<script>
+'use strict';
+const fields=['pad_horizontal_distance_m','pad_bearing_deg','pad_height_relative_to_tracker_m','rail_tilt_from_vertical_deg','rail_bearing_deg'];
+const defaults=JSON.parse(document.getElementById('defaultConfig').textContent);
+const element=id=>document.getElementById(id);
+function wrapHeading(value){return ((value%360)+360)%360;}
+function validateConfig(data){
+  const required=['schema_version','coordinate_frame','heading_reference','geometry','measurement_status'];
+  if(!data||typeof data!=='object'||Array.isArray(data)||required.some(key=>!(key in data))||Object.keys(data).some(key=>!required.includes(key)&&key!=='notes'))throw Error('Configuration has missing or unknown fields.');
+  if(data.schema_version!==1||data.coordinate_frame!=='ENU'||data.heading_reference!=='true_north_clockwise')throw Error('Use schema 1, ENU coordinates and bearings clockwise from true North.');
+  for(const section of ['geometry','measurement_status'])if(!data[section]||typeof data[section]!=='object'||Array.isArray(data[section])||Object.keys(data[section]).length!==fields.length||fields.some(key=>!(key in data[section])))throw Error('The configuration must contain all five geometry values and statuses.');
+  const geometry={...data.geometry},statuses={...data.measurement_status};
+  for(const name of fields){if(typeof geometry[name]!=='number'||!Number.isFinite(geometry[name]))throw Error(name+' must be a finite number.');if(!['nominal','measured'].includes(statuses[name]))throw Error('Each status must be nominal or measured.');}
+  if(geometry.pad_horizontal_distance_m<0)throw Error('Horizontal distance cannot be negative.');
+  if(geometry.rail_tilt_from_vertical_deg<0||geometry.rail_tilt_from_vertical_deg>180)throw Error('Rail tilt must be between 0 and 180 degrees.');
+  geometry.pad_bearing_deg=wrapHeading(geometry.pad_bearing_deg);geometry.rail_bearing_deg=wrapHeading(geometry.rail_bearing_deg);
+  if(data.notes!==undefined&&typeof data.notes!=='string')throw Error('Notes must be text.');
+  return {schema_version:1,coordinate_frame:'ENU',heading_reference:'true_north_clockwise',geometry,measurement_status:statuses,notes:data.notes||''};
+}
+function readForm(){
+  const geometry={},measurement_status={};
+  for(const name of fields){const raw=element(name).value.trim();if(raw==='')throw Error('Enter a value for '+name+'.');geometry[name]=Number(raw);measurement_status[name]=element(name+'_status').value;}
+  return validateConfig({schema_version:1,coordinate_frame:'ENU',heading_reference:'true_north_clockwise',geometry,measurement_status,notes:element('notes').value});
+}
+function showMessage(text,error=false){element('message').textContent=text;element('message').className=error?'error':'';}
+function preview(){
+  try{const config=readForm(),g=config.geometry,b=g.pad_bearing_deg*Math.PI/180;const round=value=>(Math.abs(value)<1e-10?0:value).toFixed(2);
+    element('preview').textContent='Pad position from tracker: East '+round(g.pad_horizontal_distance_m*Math.sin(b))+' m, North '+round(g.pad_horizontal_distance_m*Math.cos(b))+' m, Up '+round(g.pad_height_relative_to_tracker_m)+' m.';
+    const measured=Object.values(config.measurement_status).filter(value=>value==='measured').length;element('setupStatus').textContent=measured===0?'Nominal / unmeasured':measured+' of 5 values marked measured';
+  }catch(error){element('preview').textContent=error.message;element('setupStatus').textContent='Check entered values';}
+}
+function loadIntoForm(data,source){
+  const config=validateConfig(data);
+  for(const name of fields){element(name).value=String(config.geometry[name]);element(name+'_status').value=config.measurement_status[name];}
+  element('notes').value=config.notes;element('sourceLabel').textContent=source;showMessage('');preview();
+}
+element('configFile').addEventListener('change',async()=>{
+  const file=element('configFile').files[0];if(!file)return;
+  try{loadIntoForm(JSON.parse(await file.text()),'Loaded '+file.name+'. The source file has not been changed.');}
+  catch(error){showMessage('Could not load file: '+error.message,true);}
+});
+element('resetDefaults').addEventListener('click',()=>loadIntoForm(defaults,'Using embedded nominal defaults. No file has been changed.'));
+element('setupForm').addEventListener('input',preview);
+element('setupForm').addEventListener('change',preview);
+element('setupForm').addEventListener('submit',event=>{
+  event.preventDefault();
+  try{const config=readForm(),filename=element('exportFilename').value.trim();
+    if(!filename||!filename.toLowerCase().endsWith('.json')||/[\\/\x00-\x1f]/.test(filename))throw Error('Choose a JSON filename without a folder path.');
+    const url=URL.createObjectURL(new Blob([JSON.stringify(config,null,2)+'\n'],{type:'application/json'})),link=document.createElement('a');
+    link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    showMessage('Downloaded '+filename+'. Your chosen values are saved in that file.');
+  }catch(error){showMessage(error.message,true);}
+});
+loadIntoForm(defaults,'Using embedded nominal defaults. No file has been read from disk.');
+</script></body></html>

@@ -1,0 +1,66 @@
+{
+  "profile": {
+    "fps": 15.0,
+    "synthetic_frame_delay_s": 0.08,
+    "prime_s": 0.6
+  },
+  "launch_config": {
+    "trajectory": "../../../openrocket_trajectory.csv",
+    "field_config": "../../../field_config.json",
+    "perception": {
+      "max_frame_age_s": 0.5,
+      "max_pose_age_s": 0.5,
+      "cg_fraction_from_nose": 0.62653
+    },
+    "predictor": {},
+    "executor": {
+      "max_speed_deg_s": 15.0,
+      "max_accel_deg_s2": 75.0,
+      "lease_s": 0.4,
+      "max_control_gap_s": 0.3
+    },
+    "latency_s": 0.1
+  },
+  "camera_models": {
+    "narrow": {
+      "name": "narrow",
+      "width": 640,
+      "height": 480,
+      "fx": 50962.4685,
+      "fy": 50962.4685,
+      "cx": 319.5,
+      "cy": 239.5,
+      "az_offset_deg": 0.0,
+      "el_offset_deg": 0.0,
+      "roll_deg": 0.0,
+      "calibrated": false,
+      "distortion_coeffs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "wide": {
+      "name": "wide",
+      "width": 640,
+      "height": 480,
+      "fx": 2038.49874,
+      "fy": 2038.49874,
+      "cx": 319.5,
+      "cy": 239.5,
+      "az_offset_deg": 0.0,
+      "el_offset_deg": 0.0,
+      "roll_deg": 0.0,
+      "calibrated": false,
+      "distortion_coeffs": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

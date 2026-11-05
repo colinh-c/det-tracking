@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DET camera alignment</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101416;color:#e9eeeb;font:15px system-ui,sans-serif}main{max-width:1800px;margin:auto;padding:22px}h1{font-size:25px;font-weight:600;margin:0 0 5px}.muted{color:#a3b0ab;font-size:13px}.top,.toolbar,.measurements,.foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.top{justify-content:space-between;margin-bottom:19px}.badge{color:#9fdfbc;background:#1b3228;border:1px solid #355f47;padding:7px 12px;border-radius:20px;font-size:12px}.toolbar{padding:14px;background:#1c2422;border:1px solid #35413b;border-radius:10px;margin-bottom:14px}button,.marker{font:inherit;background:#28352e;color:#eff5f1;border:1px solid #526257;border-radius:6px;padding:8px 12px;cursor:pointer}button:hover{background:#3b5143}button:disabled{opacity:.45;cursor:default}.primary{background:#b5e8c1;color:#12291c;border-color:#b5e8c1}.markers{display:flex;gap:5px}.marker{padding:7px 10px;font-size:13px}.marker.active{outline:2px solid #b5e8c1}.views{display:grid;grid-template-columns:1fr 1fr;gap:16px}.view{background:#19201e;border:1px solid #35413b;border-radius:10px;overflow:hidden}.viewhead{padding:11px 13px;display:flex;justify-content:space-between;align-items:center}.viewhead button{font-size:12px;padding:5px 8px}.canvaswrap{position:relative;background:#050706;min-height:240px}canvas{display:block;width:100%;height:auto;cursor:crosshair}.offline{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#08100ee8;color:#c2ccc7;text-align:center;padding:30px;pointer-events:none}.offline.hidden{display:none}.points{font:12px ui-monospace,monospace;color:#afbeb5;padding:10px 13px;min-height:36px}.measurements{margin-top:18px;padding:16px;background:#19201e;border:1px solid #35413b;border-radius:10px;align-items:flex-end}.measurements label{display:grid;gap:7px;font-size:12px;color:#bdcac2}input,select{background:#101813;color:#f1f5f2;border:1px solid #526257;border-radius:5px;padding:8px;width:170px;font:14px system-ui}select{width:190px}.foot{margin-top:13px;justify-content:space-between}#message{margin-top:14px;padding:12px 14px;border-radius:7px;background:#1e2d25;min-height:43px;white-space:pre-wrap}#encoders{font:13px ui-monospace,monospace}#zoom{position:fixed;right:20px;bottom:20px;width:180px;height:180px;border:2px solid #a8c7b4;background:#111;pointer-events:none;display:none;z-index:10}.view:fullscreen{background:#101416;padding:16px}.view:fullscreen canvas{width:auto;height:calc(100vh - 100px);max-width:100%;margin:auto}@media(max-width:850px){.views{grid-template-columns:1fr}main{padding:12px}}
+.encoder-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 0 16px}.encoder-card{padding:13px 16px;background:#19201e;border:1px solid #35413b;border-radius:10px}.encoder-state{font-size:17px;margin:7px 0;color:#ffc777}.encoder-state.good{color:#a7e4b6}.encoder-details{color:#a3b0ab;font-size:12px}.encoder-help{font-size:13px;color:#c1cdc6;margin-top:7px}@media(max-width:850px){.encoder-panel{grid-template-columns:1fr}}
+.motion-panel{padding:14px 16px;margin-bottom:16px;background:#19201e;border:1px solid #526257;border-radius:10px}.motion-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}.motion-controls select{width:170px}.motion-controls button{touch-action:none;user-select:none}.motion-controls button.holding{background:#658e54;border-color:#b5e8c1}.stop{background:#862e31;border-color:#db777c;color:white;font-weight:700}.stop:hover{background:#a43b3f}#motionStatus{font-size:13px;color:#bdcac2;margin-top:8px}
+.limit-fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}.limit-field{display:grid;gap:6px}.limit-field label{font-size:13px}.limit-field input{width:145px}.limit-field button{font-size:12px}.limit-status{font-size:13px;margin-top:8px;white-space:pre-wrap}
+</style></head><body><main>
+<div class="top"><div><h1>Camera alignment</h1><div class="muted">Mark the same wall references in both cameras.</div></div><div class="badge" id="motionBadge">Checking movement</div></div>
+<div class="encoder-panel" aria-live="polite"><div class="encoder-card"><strong>Encoder 1</strong><div class="encoder-state" id="encoderState0">Connecting</div><div class="encoder-details" id="encoderDetails0"></div><div class="encoder-help" id="encoderHelp0"></div></div><div class="encoder-card"><strong>Encoder 2</strong><div class="encoder-state" id="encoderState1">Connecting</div><div class="encoder-details" id="encoderDetails1"></div><div class="encoder-help" id="encoderHelp1"></div></div></div>
+<section class="motion-panel" aria-label="Manual movement">
+<strong>Manual adjustment</strong>
+<div class="motion-controls"><label for="jogMode">Movement</label><select id="jogMode"><option value="step">Step</option><option value="continuous">Continuous slow</option></select><span id="jogStepField"><label for="jogSize">Step size</label> <input id="jogSize" type="number" value="1" min="0" step="any" aria-label="Movement in degrees"> <span class="muted">degrees</span></span><span id="jogSpeedField" hidden><label for="jogSpeed">Requested speed</label> <input id="jogSpeed" type="number" value="0.5" min="0.01" max="15" step="any" aria-label="Requested speed in degrees per second"> <span class="muted">degrees/s</span></span><button id="jogAzMinus" disabled>Az −</button><button id="jogAzPlus" disabled>Az +</button><button id="jogElMinus" disabled>El −</button><button id="jogElPlus" disabled>El +</button><button class="stop" id="motionStop" disabled>Stop movement</button></div>
+<div class="muted" id="motionHelp">Choose the move size in degrees. No zeroing or calibration required for manual jogs. Encoders are not controlling position.</div>
+<div id="motionStatus" role="status">Connecting to motor controller.</div>
+</section>
+<section class="motion-panel" aria-label="Movement limits">
+<strong>Movement limits</strong>
+<div class="limit-status" id="activeLimits" aria-live="polite">Active limits: waiting for controller.</div>
+<div class="muted">Draft limits in current motor coordinates, in degrees. Copying a position or applying limits does not move or zero the mount.</div>
+<div class="limit-fields">
+<div class="limit-field"><label for="az_min">Az minimum</label><input id="az_min" type="number" step="any"><button id="use_az_min" disabled>Use current az position</button></div>
+<div class="limit-field"><label for="az_max">Az maximum</label><input id="az_max" type="number" step="any"><button id="use_az_max" disabled>Use current az position</button></div>
+<div class="limit-field"><label for="el_min">El minimum</label><input id="el_min" type="number" step="any"><button id="use_el_min" disabled>Use current el position</button></div>
+<div class="limit-field"><label for="el_max">El maximum</label><input id="el_max" type="number" step="any"><button id="use_el_max" disabled>Use current el position</button></div>
+</div>
+<button class="primary" id="applyLimits" disabled>Apply limits</button> <button id="reloadLimits" disabled>Load reported limits</button>
+<div class="limit-status" id="limitsMessage" role="status">Release movement before copying or applying limits. Minimum must be below maximum, with the current position inside.</div>
+<div class="muted">Recheck limits after controller restart. Controller acknowledgements do not verify physical travel.</div>
+</section>
+<div class="toolbar"><button class="primary" id="freeze">Freeze both views</button><button id="resume" disabled>Resume live</button><div class="markers" id="markers"></div><span class="muted">Select a mark, then click each image. Arrow keys adjust by 1 pixel; Shift adjusts by 10.</span></div>
+<div class="views" id="views"></div>
+<div class="measurements">
+<label>Dot A to Dot B (cm)<input id="spacing" type="number" min="0" step="any" placeholder="Enter measured spacing"></label>
+<label>Distance to Dot A (m)<input id="distance" type="number" min="0" step="any" placeholder="Enter measured distance"></label>
+<label>Distance measurement<select id="distanceType"><option value="unspecified">Choose how measured</option><option value="horizontal">Horizontal to wall</option><option value="slant">Straight line to Dot A</option></select></label>
+<label>Pointer above Dot A (cm)<input id="vertical" type="number" step="any" placeholder="Enter vertical offset"></label>
+<button class="primary" id="save" disabled>Save wall reference</button>
+</div>
+<div class="foot"><span class="muted">This records the wall alignment. Axis directions and motion scale still need a separate check.</span><span id="encoders">Encoders: connecting</span></div>
+<div id="message" role="status">Live camera views appear here when connected. Freeze both views to mark the wall references.</div>
+</main><canvas id="zoom" width="180" height="180"></canvas><script src="/geometry.js"></script><script>
+const colors={a:'#65ddff',b:'#ddacff',pointer:'#ffce70',aim:'#ff7f82'}, names={a:'Dot A',b:'Dot B',pointer:'Pointer',aim:'Aim'};
+let active='a', selectedView=0, frozen=null, busy=false;
+let motionToken='', motionStatus=null, motionBusy=false, motionStopping=0, motionRequest=0, activeHold=null;
+let limitsBusy=false, limitsInitialized=false, limitsDirty=false;
+const views=[0,1].map(i=>({points:{},rotation:0,image:null,received:0,info:null,error:'Connecting'}));
+const $=id=>document.getElementById(id), message=t=>{$('message').textContent=t;};
+for(const key of Object.keys(names)) {const b=document.createElement('button');b.textContent=names[key];b.className='marker'+(key===active?' active':'');b.style.color=colors[key];b.onclick=()=>{active=key;document.querySelectorAll('.marker').forEach(x=>x.classList.toggle('active',x===b));};$('markers').appendChild(b);}
+views.forEach((v,i)=>{const box=document.createElement('section');box.className='view';box.innerHTML=`<div class="viewhead"><div><strong>Camera ${i+1}</strong> <span class="muted" id="meta${i}">Connecting</span></div><div><button id="rotate${i}">Rotate</button> <button id="large${i}">Enlarge</button></div></div><div class="canvaswrap"><canvas id="canvas${i}" width="1280" height="720"></canvas><div class="offline" id="offline${i}">Waiting for camera ${i+1}</div></div><div class="points" id="points${i}">No reference marks yet</div>`;$('views').appendChild(box);v.canvas=$('canvas'+i);v.ctx=v.canvas.getContext('2d');$('rotate'+i).onclick=()=>{v.rotation=(v.rotation+90)%360;draw(i);};$('large'+i).onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else box.requestFullscreen();};v.canvas.onpointerdown=e=>{selectedView=i;if(!frozen){message('Freeze both views first, then mark the stationary wall references.');return;}const rect=v.canvas.getBoundingClientRect(),n=screenToNative([(e.clientX-rect.left)/rect.width,(e.clientY-rect.top)/rect.height],v.rotation);v.points[active]=[Math.min(v.image.width-1,Math.max(0,n[0]*v.image.width)),Math.min(v.image.height-1,Math.max(0,n[1]*v.image.height))];drawAll();updateSave();};v.canvas.onpointermove=e=>showZoom(i,e);v.canvas.onpointerleave=()=>$('zoom').style.display='none';});
+function cross(ctx,x,y,color,label,dashed=false){ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1.5;ctx.setLineDash(dashed?[7,5]:[]);ctx.beginPath();ctx.moveTo(x-22,y);ctx.lineTo(x+22,y);ctx.moveTo(x,y-22);ctx.lineTo(x,y+22);ctx.arc(x,y,7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.font='16px system-ui';ctx.fillText(label,x+12,y-12);ctx.restore();}
+function draw(i){const v=views[i];if(!v.image)return;const [w,h]=[v.image.width,v.image.height],turned=v.rotation%180!==0;v.canvas.width=turned?h:w;v.canvas.height=turned?w:h;const ctx=v.ctx;ctx.save();ctx.translate(v.canvas.width/2,v.canvas.height/2);ctx.rotate(v.rotation*Math.PI/180);ctx.drawImage(v.image,-w/2,-h/2);ctx.restore();ctx.strokeStyle='#ffffff55';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(v.canvas.width/2-12,v.canvas.height/2);ctx.lineTo(v.canvas.width/2+12,v.canvas.height/2);ctx.moveTo(v.canvas.width/2,v.canvas.height/2-12);ctx.lineTo(v.canvas.width/2,v.canvas.height/2+12);ctx.stroke();for(const [key,p]of Object.entries(v.points)){const n=nativeToScreen([p[0]/w,p[1]/h],v.rotation);cross(ctx,n[0]*v.canvas.width,n[1]*v.canvas.height,colors[key],names[key]);}const other=views[1-i];if(other.points.aim&&['a','b'].every(k=>other.points[k]&&v.points[k])&&!v.points.aim){try{const p=mapPoint(other.points.aim,other.points,v.points),n=nativeToScreen([p[0]/w,p[1]/h],v.rotation);cross(ctx,n[0]*v.canvas.width,n[1]*v.canvas.height,colors.aim,'Aim estimate',true);}catch{}}$('points'+i).textContent=Object.entries(v.points).map(([k,p])=>`${names[k]} ${p[0].toFixed(1)}, ${p[1].toFixed(1)}`).join('  ·  ')||'No reference marks yet';}
+function drawAll(){draw(0);draw(1);}
+function showZoom(i,e){const c=views[i].canvas,r=c.getBoundingClientRect(),x=(e.clientX-r.left)*c.width/r.width,y=(e.clientY-r.top)*c.height/r.height,z=$('zoom'),ctx=z.getContext('2d');if(!views[i].image)return;z.style.display='block';ctx.fillStyle='#101416';ctx.fillRect(0,0,180,180);ctx.imageSmoothingEnabled=false;ctx.drawImage(c,x-22.5,y-22.5,45,45,0,0,180,180);ctx.strokeStyle='#fff';ctx.beginPath();ctx.moveTo(75,90);ctx.lineTo(105,90);ctx.moveTo(90,75);ctx.lineTo(90,105);ctx.stroke();}
+async function api(path,data,options={}){const response=await fetch(path,{method:'POST',keepalive:Boolean(options.keepalive),headers:{'Content-Type':'application/json',...(path.startsWith('/motion/')?{'X-DET-Token':motionToken}:{})},body:JSON.stringify(data||{})});const result=await response.json();if(!response.ok)throw Error(result.error||'Request failed');return result;}
+async function loadImage(url){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw Error('Camera not available');const info=response.headers.get('X-Frame-Info');const image=await createImageBitmap(await response.blob());return {image,info:info?JSON.parse(info):null};}
+async function poll(i){while(true){try{if(!frozen&&!busy){const value=await loadImage('/frame/'+i+'.jpg?t='+Date.now());if(!frozen&&!busy){if(views[i].image)views[i].image.close();Object.assign(views[i],value,{received:Date.now(),error:null});$('offline'+i).classList.add('hidden');$('meta'+i).textContent=value.image.width+' × '+value.image.height+' · Live';draw(i);}else value.image.close();}}catch(e){if(!frozen){views[i].error=e.message;$('offline'+i).classList.remove('hidden');$('offline'+i).textContent='Camera feed unavailable. Reconnecting…';$('meta'+i).textContent='Disconnected';}}await new Promise(r=>setTimeout(r,70));}}
+$('freeze').onclick=async()=>{if(busy||motionBusy||motionStopping||activeHold||motionStatus?.busy||motionStatus?.hold_active)return;busy=true;$('freeze').disabled=true;try{const record=await api('/freeze');const frames=await Promise.all([0,1].map(i=>loadImage('/frozen/'+i+'.jpg?id='+record.id)));frozen=record;frames.forEach((value,i)=>{if(views[i].image)views[i].image.close();Object.assign(views[i],value,{points:{},error:null});$('offline'+i).classList.add('hidden');$('meta'+i).textContent=value.image.width+' × '+value.image.height+' · Frozen';});$('resume').disabled=false;drawAll();message('Views frozen. Select Dot A and click it in each image, then repeat for Dot B and the pointer’s wall position.');}catch(e){message(e.message);$('freeze').disabled=false;}finally{busy=false;updateSave();}};
+$('resume').onclick=async()=>{try{await api('/resume');frozen=null;views.forEach(v=>v.points={});$('resume').disabled=true;$('freeze').disabled=false;updateSave();updateMotionButtons();message('Live view resumed. Reference marks cleared so they cannot be applied to a changed pose.');}catch(e){message(e.message);}};
+function updateSave(){$('save').disabled=!frozen||busy||!views.every(v=>['a','b','pointer'].every(k=>v.points[k]))||!($('spacing').value>0&&$('distance').value>0)||$('vertical').value===''||$('distanceType').value==='unspecified';}
+['spacing','distance','vertical','distanceType'].forEach(id=>$(id).addEventListener('input',updateSave));
+$('save').onclick=async()=>{busy=true;updateSave();try{const result=await api('/save',{freeze_id:frozen.id,measurements:{dot_spacing_m:Number($('spacing').value)/100,distance_to_a_m:Number($('distance').value),vertical_offset_m:Number($('vertical').value)/100,distance_measurement:$('distanceType').value},views:views.map(v=>({points:v.points,display_rotation:v.rotation}))});message('Wall reference saved. Axis calibration is still pending.\n'+result.path);}catch(e){message(e.message);}finally{busy=false;updateSave();}};
+window.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)||!frozen)return;const direction={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!direction)return;const v=views[selectedView],p=v.points[active];if(!p)return;e.preventDefault();const step=e.shiftKey?10:1,s=nativeToScreen([p[0]/v.image.width,p[1]/v.image.height],v.rotation);s[0]+=direction[0]*step/v.canvas.width;s[1]+=direction[1]*step/v.canvas.height;const n=screenToNative(s,v.rotation);v.points[active]=[Math.min(v.image.width-1,Math.max(0,n[0]*v.image.width)),Math.min(v.image.height-1,Math.max(0,n[1]*v.image.height))];drawAll();});
+function showEncoder(v,i){const state=$('encoderState'+i);if(v.stale||v.error==='Encoder polling stopped'){state.classList.remove('good');state.textContent=v.error||'Waiting for fresh encoder reading';$('encoderDetails'+i).textContent='';$('encoderHelp'+i).textContent='The last angle is not current.';return;}if(v.enabled===false){state.classList.remove('good');state.textContent='Encoder checks paused';$('encoderDetails'+i).textContent='';$('encoderHelp'+i).textContent='Complete encoder setup before using angle readings.';return;}const connected=v.connected===true||Number.isInteger(v.status);state.classList.toggle('good',!!v.valid);state.textContent=Number.isFinite(v.degrees)?v.degrees.toFixed(2)+'° · '+(v.valid?'Good sensor status':'Sensor warning'):connected?'Connected · '+(v.error||'Waiting for angle'):v.error||'Waiting for encoder';const details=[];if(Number.isFinite(v.agc))details.push('Automatic gain '+v.agc);if(v.field_weak)details.push('Maximum gain flag');if(v.field_strong)details.push('Minimum gain flag');if(v.magnet_detected===true)details.push('Magnet detected');if(Number.isFinite(v.magnitude))details.push('Field reading '+v.magnitude);$('encoderDetails'+i).textContent=details.join(' · ');$('encoderHelp'+i).textContent=v.valid?'Live absolute reading. Axis zero and direction still need calibration.':connected?'Live reported angle shown for diagnosis. Accuracy and axis calibration are not verified.':'Check the encoder connection.';}
+async function encoders(){try{const response=await fetch('/encoders');if(!response.ok)throw Error();const result=await response.json();result.forEach(showEncoder);$('encoders').textContent=result.every(v=>v.enabled===false)?'Encoders: not enabled':'Encoder status updated';}catch{$('encoders').textContent='Encoders: waiting for Pi';[0,1].forEach(i=>{$('encoderState'+i).textContent='Waiting for Pi';$('encoderState'+i).classList.remove('good');$('encoderDetails'+i).textContent='';$('encoderHelp'+i).textContent='';});}setTimeout(encoders,500);}
+const jogButtons=['jogAzMinus','jogAzPlus','jogElMinus','jogElPlus'];
+const limitFields=['az_min','az_max','el_min','el_max'];
+function limitsIdle(status=motionStatus){return Boolean(motionToken&&status?.connected&&!status?.recovery_required&&!motionBusy&&!motionStopping&&!activeHold&&!status?.busy&&!status?.hold_active&&!status?.automatic_active);}
+function movementReady(){return Boolean(motionToken&&motionStatus?.connected&&!motionStatus?.last_error&&!frozen&&!busy&&!motionBusy&&!motionStopping&&!activeHold&&!limitsBusy&&!motionStatus?.busy&&!motionStatus?.hold_active);}
+function reportedLimits(status=motionStatus){
+  const limits=status?.limits?.soft_limits_deg;
+  if(!limits||!['az','el'].every(axis=>Array.isArray(limits[axis])&&limits[axis].length===2&&limits[axis].every(Number.isFinite)&&limits[axis][0]<limits[axis][1]))return null;
+  return {az_min:limits.az[0],az_max:limits.az[1],el_min:limits.el[0],el_max:limits.el[1]};
+}
+function fillLimitDraft(values){if(!values)return;limitFields.forEach(id=>$(id).value=String(values[id]));limitsInitialized=true;limitsDirty=false;}
+function renderLimits(){
+  const values=reportedLimits(), info=motionStatus?.limits;
+  if(!motionStatus?.connected||!values){$('activeLimits').textContent='Active limits: unavailable.';return;}
+  const prefix=info.confirmation_required?'Saved limits, Apply required':info.acknowledged?'Active limits acknowledged':'Reported limits, not confirmed';
+  $('activeLimits').textContent=`${prefix}: az ${values.az_min}° to ${values.az_max}°, el ${values.el_min}° to ${values.el_max}°.`+(info.detail?' '+info.detail:'');
+  if(!limitsInitialized&&!limitsDirty)fillLimitDraft(values);
+}
+async function freshIdleMotion(){
+  const response=await fetch('/motion',{cache:'no-store'}), status=await response.json();
+  if(!response.ok)throw Error(status.error||'Motor controller unavailable.');
+  motionStatus=status;renderLimits();
+  if(!limitsIdle(status))throw Error('Controller must be connected and idle. Release movement before setting limits.');
+  return status;
+}
+async function limitAction(action){
+  if(limitsBusy)return;
+  if(!limitsIdle()){$('limitsMessage').textContent='Controller must be connected and idle. Release movement before setting limits.';return;}
+  limitsBusy=true;updateMotionButtons();
+  try{await action();}catch(e){$('limitsMessage').textContent=e.message;}
+  finally{limitsBusy=false;updateMotionButtons();}
+}
+limitFields.forEach(id=>{
+  $(id).addEventListener('input',()=>{limitsDirty=true;});
+  $('use_'+id).onclick=()=>limitAction(async()=>{
+    const status=await freshIdleMotion(), axis=id.slice(0,2), value=status.position?.[axis], age=status.position_age_seconds;
+    if(!Number.isFinite(value)||!Number.isFinite(age)||age<0||age>1)throw Error('A fresh motor position is unavailable. Try again while idle.');
+    $(id).value=String(value);limitsDirty=true;
+    $('limitsMessage').textContent=`Copied current ${axis} position ${value}° into the draft. Press Apply limits to use it.`;
+  });
+});
+$('reloadLimits').onclick=()=>limitAction(async()=>{await freshIdleMotion();const values=reportedLimits();if(!values)throw Error('Reported limits are unavailable.');fillLimitDraft(values);$('limitsMessage').textContent='Draft reset to reported limits. No settings changed.';});
+$('applyLimits').onclick=()=>limitAction(async()=>{
+  const values={};limitFields.forEach(id=>{const raw=$(id).value.trim();if(raw===''||!Number.isFinite(Number(raw)))throw Error('Enter a finite number in all four limit fields.');values[id]=Number(raw);});
+  if(values.az_min>=values.az_max||values.el_min>=values.el_max)throw Error('Each minimum must be below its maximum.');
+  await freshIdleMotion();
+  $('limitsMessage').textContent='Applying limits…';
+  const status=await api('/motion/limits',values);
+  motionStatus=status;renderLimits();fillLimitDraft(reportedLimits(status)||values);
+  $('limitsMessage').textContent='Limits acknowledged. Recheck limits after controller restart.';
+});
+function saveJogSettings(){try{window.localStorage.setItem('det.manualJog',JSON.stringify({mode:$('jogMode').value,size:$('jogSize').value,speed:$('jogSpeed').value}));}catch{}}
+function restoreJogSettings(){try{const saved=JSON.parse(window.localStorage.getItem('det.manualJog')||'null');if(!saved)return;if(['step','continuous'].includes(saved.mode))$('jogMode').value=saved.mode;for(const [key,id,max] of [['size','jogSize',Infinity],['speed','jogSpeed',15]]){const value=Number(saved[key]);if(Number.isFinite(value)&&value>0&&value<=max)$(id).value=String(value);}}catch{}}
+['jogSize','jogSpeed'].forEach(id=>$(id).addEventListener('input',saveJogSettings));
+function updateMotionButtons(){
+  const ready=movementReady(), holding=Boolean(activeHold), unavailable=motionBusy||motionStopping||limitsBusy||Boolean(motionStatus?.busy)||Boolean(motionStatus?.hold_active);
+  jogButtons.forEach(id=>$(id).disabled=activeHold?.button===$(id)?false:!ready);
+  $('jogSize').disabled=holding||unavailable;
+  $('jogMode').disabled=holding||unavailable;
+  $('jogSpeed').disabled=holding||unavailable;
+  $('motionStop').disabled=!motionToken;
+  $('freeze').disabled=Boolean(frozen||busy||holding||unavailable);
+  const limitsReady=limitsIdle()&&!limitsBusy;
+  limitFields.forEach(id=>{$('use_'+id).disabled=!limitsReady;$(id).disabled=limitsBusy;});
+  $('applyLimits').disabled=!limitsReady;$('reloadLimits').disabled=!limitsReady;
+}
+function updateJogMode(){
+  const continuous=$('jogMode').value==='continuous';
+  $('jogStepField').hidden=continuous;$('jogSpeedField').hidden=!continuous;
+  $('motionHelp').textContent=continuous?'Hold a direction button to move. Release to stop. No zeroing or calibration required for manual jogs. Encoders are not controlling position.':'Choose the move size in degrees. No zeroing or calibration required for manual jogs. Encoders are not controlling position.';
+  updateMotionButtons();
+}
+async function jog(axis,sign){if($('jogMode').value!=='step'||!movementReady())return;const step=Number($('jogSize').value);if(!Number.isFinite(step)||step<=0){$('motionStatus').textContent='Enter a positive movement in degrees.';return;}motionBusy=true;const request=++motionRequest;updateMotionButtons();$('motionStatus').textContent='Moving…';try{await api('/motion/jog',{axis,delta:sign*step});if(request===motionRequest)$('motionStatus').textContent='Commanded step completed. Check the camera image for actual movement.';}catch(e){if(request===motionRequest)$('motionStatus').textContent=e.message;}finally{motionBusy=false;updateMotionButtons();}}
+async function stopMotion(body={},keepalive=false,reason=''){
+  const request=++motionRequest;motionStopping++;updateMotionButtons();
+  $('motionStatus').textContent=(reason?reason+' ':'')+'Stopping…';
+  try{await api('/motion/stop',body,{keepalive});if(request===motionRequest&&!activeHold)$('motionStatus').textContent=(reason?reason+' ':'')+'Stop acknowledged. Check that the mount is stationary.';}
+  catch(e){if(request===motionRequest&&!activeHold)$('motionStatus').textContent='Stop was not confirmed: '+e.message;}
+  finally{motionStopping--;updateMotionButtons();}
+}
+function releaseHold({global=false,keepalive=true,reason=''}={}){
+  const hold=activeHold;if(!hold)return Promise.resolve();
+  // Invalidate locally before any await: late start/renew replies cannot revive it.
+  hold.released=true;if(hold.timer!==null)clearTimeout(hold.timer);hold.timer=null;activeHold=null;
+  hold.button.classList.remove('holding');
+  try{if(hold.button.hasPointerCapture(hold.pointerId))hold.button.releasePointerCapture(hold.pointerId);}catch{}
+  return stopMotion({hold_id:hold.id,...(global?{global:true}:{})},keepalive,reason);
+}
+function scheduleHoldRenew(hold){
+  if(activeHold!==hold||hold.released)return;
+  hold.timer=setTimeout(()=>{hold.timer=null;renewHold(hold);},200);
+}
+async function renewHold(hold){
+  if(activeHold!==hold||hold.released||hold.renewing)return;
+  hold.renewing=true;
+  try{await api('/motion/hold/renew',{hold_id:hold.id});if(activeHold===hold&&!hold.released)scheduleHoldRenew(hold);}
+  catch(e){if(activeHold===hold&&!hold.released)releaseHold({reason:'Continuous move interrupted: '+e.message});}
+  finally{hold.renewing=false;}
+}
+async function beginHold(event,button,axis,sign){
+  if($('jogMode').value!=='continuous')return;
+  event.preventDefault();
+  if(event.button!==0||event.isPrimary===false||!movementReady())return;
+  const speed=Number($('jogSpeed').value);
+  if(!Number.isFinite(speed)||speed<=0||speed>15){$('motionStatus').textContent='Enter a requested speed above 0 and no greater than 15 degrees/s.';return;}
+  let id;try{id=crypto.randomUUID();}catch{$('motionStatus').textContent='Continuous movement requires a current browser on this local dashboard.';return;}
+  const hold={id,axis,velocity:sign*speed,button,pointerId:event.pointerId,released:false,starting:true,renewing:false,timer:null};
+  activeHold=hold;++motionRequest;
+  try{button.setPointerCapture(event.pointerId);}catch{activeHold=null;updateMotionButtons();$('motionStatus').textContent='Could not hold the direction button. Try again.';return;}
+  button.classList.add('holding');updateMotionButtons();
+  const label=(axis==='az'?'Az':'El')+(sign>0?' +':' −');
+  $('motionStatus').textContent='Starting '+label+' at requested '+speed+'°/s. Release to stop.';
+  try{
+    await api('/motion/hold/start',{hold_id:id,axis,velocity:sign*speed});
+    if(activeHold!==hold||hold.released)return;
+    hold.starting=false;$('motionStatus').textContent='Holding '+label+' at requested '+speed+'°/s. Release to stop.';
+    scheduleHoldRenew(hold);
+  }catch(e){if(activeHold===hold&&!hold.released)releaseHold({reason:'Continuous move could not start: '+e.message});}
+}
+function releasePointer(event){if(activeHold&&event.pointerId===activeHold.pointerId)releaseHold();}
+[['jogAzMinus','az',-1],['jogAzPlus','az',1],['jogElMinus','el',-1],['jogElPlus','el',1]].forEach(([id,axis,sign])=>{
+  const button=$(id);
+  button.onclick=event=>{if($('jogMode').value==='continuous'){event?.preventDefault();return;}jog(axis,sign);};
+  button.addEventListener('pointerdown',event=>beginHold(event,button,axis,sign));
+  ['pointerup','pointercancel','lostpointercapture'].forEach(type=>button.addEventListener(type,releasePointer));
+});
+window.addEventListener('pointerup',releasePointer);
+window.addEventListener('pointercancel',releasePointer);
+window.addEventListener('blur',()=>releaseHold());
+window.addEventListener('pagehide',()=>releaseHold({keepalive:true}));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseHold({keepalive:true});});
+$('jogMode').addEventListener('change',()=>{if(activeHold)releaseHold();saveJogSettings();updateJogMode();});
+$('motionStop').onclick=()=>activeHold?releaseHold({global:true}):stopMotion({});
+async function pollMotion(){try{const response=await fetch('/motion',{cache:'no-store'});if(!response.ok)throw Error('Motor controller unavailable');motionStatus=await response.json();$('motionBadge').textContent=motionStatus.connected&&!motionStatus.last_error?'Manual movement available':'Movement unavailable';if(activeHold&&(!motionStatus.connected||motionStatus.last_error))releaseHold({reason:motionStatus.last_error||'Motor controller unavailable.'});if(!motionBusy&&!activeHold&&!motionStopping){if(motionStatus.last_error)$('motionStatus').textContent=motionStatus.last_error;else if(frozen)$('motionStatus').textContent='Resume live views before moving.';else if(motionStatus.hold_active)$('motionStatus').textContent='A continuous move is active. Stop movement is available.';else if(motionStatus.position){const p=motionStatus.position;$('motionStatus').textContent=`Motor coordinates: az ${Number(p.az).toFixed(2)}°, el ${Number(p.el).toFixed(2)}°. No zeroing or calibration required for manual jogs.`;}}}catch(e){motionStatus=null;$('motionBadge').textContent='Movement unavailable';if(activeHold)releaseHold({reason:e.message});else if(!motionBusy&&!motionStopping)$('motionStatus').textContent=e.message;}renderLimits();updateMotionButtons();setTimeout(pollMotion,750);}
+restoreJogSettings();updateJogMode();
+async function loadMotion(){try{const response=await fetch('/session',{cache:'no-store'});if(!response.ok)throw Error('Refresh the dashboard');const session=await response.json();if(session.motion_enabled)motionToken=session.motion_token;else $('motionStatus').textContent='Manual movement is not configured.';}catch(e){$('motionStatus').textContent=e.message;}pollMotion();}
+poll(0);poll(1);encoders();loadMotion();
+</script></body></html>

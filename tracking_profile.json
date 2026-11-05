@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "status": "integrated_launch_stack_development_tested_pending_hardware_validation",
+  "requirements_date": "2026-11-02",
+  "compute": {
+    "vision_and_phase": "mac",
+    "prediction": "mac",
+    "executor_control": "mac",
+    "pi_role": [
+      "native_camera_capture",
+      "encoder_and_motor_io_transport",
+      "link_watchdog"
+    ],
+    "skr_pico_role": [
+      "step_generation",
+      "existing_hardware_limits"
+    ]
+  },
+  "first_flight": {
+    "tracked_object": "rocket",
+    "payload_deployment_enabled": false,
+    "pre_main_objective": "retain_correct_rocket_in_frame",
+    "main_descent_aim_point": "estimated_rocket_center_of_mass",
+    "descent_primary_objective": "maximize_valid_time_on_correct_target",
+    "hard_pixel_tolerance": null,
+    "main_descent_secondary_objective": "minimize_estimated_center_of_mass_error_while_retaining_target",
+    "aim_point_estimation": "Use the design CG with body pose and nose/tail identity when available; report uncertainty rather than equating brightness centroid with measured mass center.",
+    "pre_main_preferred_camera": "narrow_when_feasible",
+    "pre_main_fallback": "wide_for_acquisition_and_retention",
+    "retained_internal_payload_mass_is_not_removed": true
+  },
+  "future_payload_flight": {
+    "enabled": false,
+    "aim_point_after_confirmed_handoff": "payload_parachute_center"
+  },
+  "field_geometry_file": "field_config.json",
+  "optics": {
+    "narrow_focal_length_nominal_mm": 400.0,
+    "sensor_size_px": [
+      1456,
+      1088
+    ],
+    "actual_frame_rate_and_latency": "to_be_measured",
+    "wide_intrinsics": "pending_final_calibration"
+  },
+  "flight_prior": {
+    "source_archive": "OpenRocket Designs IREC 1.13 Oct 26.ork",
+    "source_sha256": "360edcbcf189213074ca7f98f07471df02b31accb24d8e0c6513368777c2420d",
+    "baseline_selection": "archive_default_configuration_and_matching_uptodate_simulation",
+    "first_flight_payload_override": false,
+    "field_geometry_changes_do_not_rerun_rocket_dynamics": true,
+    "selected_simulation": "Simulation 3",
+    "selected_motor": "AeroTech M2500T",
+    "export": "openrocket_trajectory.csv",
+    "tracker_relative_export": "pointing_prior.csv"
+  },
+  "calibration": {
+    "owner": "Colin",
+    "timing": "closer_to_launch",
+    "camera_method_planned": "star_tracking",
+    "motor": "pending_user_calibration",
+    "radio": "pending_user_definition_and_calibration",
+    "provisional_wall_fit": "../DET_Calibration_2026-10-27/calibration-results/20261103T043255Z-cd009964/calibration_solution.json",
+    "provisional_wall_fit_is_not_final_axis_calibration": true,
+    "manual_jog_requires_zeroing": false,
+    "camera_configuration_tag_required": [
+      "camera_id",
+      "lens",
+      "focus_setting",
+      "mounting",
+      "image_geometry",
+      "timestamp_and_site_reference"
+    ],
+    "finite_range_verification": "Verify applicability after any refocus or mounting change."
+  },
+  "telemetry": {
+    "availability": "not_specified",
+    "vision_only_operation_supported_by_design": true,
+    "launch_time_source": "configurable_not_yet_selected"
+  },
+  "validation": {
+    "representative_real_flight_video_available": false,
+    "synthetic_video_authorized": true,
+    "synthetic_truth_for_evaluation_only": true,
+    "metrics": [
+      "correct_identity_visible_fraction_per_camera_and_phase",
+      "main_descent_boresight_inside_rocket_time_s",
+      "main_descent_time_vs_aim_error_tolerance_curve",
+      "longest_loss_interval_s",
+      "reacquisition_time_s",
+      "center_of_mass_error_px_distribution",
+      "identity_switch_count",
+      "end_to_end_latency_distribution"
+    ],
+    "claim_real_flight_validation": false,
+    "report": "VALIDATION.md",
+    "test_log": "validation/unittest.log"
+  },
+  "sources": {
+    "gimbal_archive": "gimball.f3z",
+    "gimbal_sha256": "3867305d121dc564febd70aedf917f2743cf4cb7c2607b09130a25d6c329cdf8",
+    "supplied_detector_dir": "local-inputs"
+  },
+  "field_setup_editor": "field_setup.html",
+  "work_completed_this_step": {
+    "source_import_and_field_configuration": true,
+    "full_three_module_tracker_implemented": true,
+    "hardware_deployment_performed": false,
+    "actuation_performed": false,
+    "synthetic_closed_loop_tests_performed": true
+  },
+  "launch_date": "2026-11-07",
+  "implementation_date": "2026-11-03",
+  "modules": {
+    "perception": "perception.py",
+    "prediction": "prediction.py",
+    "executor": "execution.py",
+    "runtime": "runtime.py",
+    "display": "dashboard.html",
+    "transport": "transport.py",
+    "pi_gateway": "pi_tracking_gateway.py",
+    "firmware": "firmware/gimbal_skr_pico/gimbal_skr_pico.ino"
+  },
+  "live_prerequisites": [
+    "final_camera_and_encoder_registration",
+    "measured_field_geometry",
+    "as_flown_configuration_confirmation",
+    "VEL_LEASE_V1_firmware_installation",
+    "physical_end_to_end_bench_validation"
+  ]
+}

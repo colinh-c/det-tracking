@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "launch_config": "launch_config.json",
+  "handoff_url": "http://127.0.0.1:18083",
+  "encoder_url": "http://127.0.0.1:18082/encoders",
+  "fps": 15.0,
+  "expected_duration_s": 139.738,
+  "synthetic_frame_delay_s": 0.08,
+  "prime_s": 0.6,
+  "pose_max_age_s": 0.2,
+  "executor_overrides": {
+    "lease_s": 0.4,
+    "max_control_gap_s": 0.3
+  },
+  "save_frames": true,
+  "allow_limit_saturation": true,
+  "output_root": "runs/full-flight-hardware",
+  "scope": "Real gimbal with synthetic images and unqualified controller-count bench feedback. Not calibrated flight control. Preparation only unless --execute is explicitly supplied after approval."
+}

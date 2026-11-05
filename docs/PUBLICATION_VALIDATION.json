@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-04",
+  "publication_validation": {
+    "core_python_tests": 222,
+    "manual_dashboard_python_tests": 83,
+    "viewfinder_control_javascript_tests": 28,
+    "geometry_javascript_checks": "passed",
+    "hardware_required": false,
+    "hardware_contact_during_publication": false
+  },
+  "unchanged_tracking_core_sha256": {
+    "perception.py": "58bd844f19a32648a5223ef0575bddb9c0872911cb0942c62f494e8bcbd22732",
+    "prediction.py": "577d451dd4ab307616b6d56b412356a73d5455bc2443d4d7a7caf4a5618e8dd0",
+    "execution.py": "299f7abf7c4a2dd88b714bca264840a11ce865b07e9dc8d2222c465f623e58d7",
+    "runtime.py": "5b11642ea8e545f5f10661f039e2c14cb9f659abbe8d2de21c975265c964382f",
+    "simulation.py": "8e1ed5f1bb7a2aba00b844b6a9c4b3b282593317d24d41e4e10a4be60364ab46"
+  },
+  "prior_bounded_simulation_results": [
+    {
+      "seed": 7,
+      "trajectory_duration_s": 139.738,
+      "main_rows": 432,
+      "main_correct_selection_rows": 432,
+      "main_narrow_com_in_frame_fraction": 0.9884259259259259,
+      "main_narrow_boresight_inside_body_fraction": 0.9398148148148148,
+      "incorrect_selection_rows": 0,
+      "early_visual_main_rows": 0,
+      "travel_violation_rows": 0,
+      "main_pointing_error_percentiles_deg": {
+        "p50": 0.035274709063587685,
+        "p90": 0.04045107317017162,
+        "p95": 0.04114006010707801,
+        "p99": 0.30792352866581385,
+        "max": 0.5207727954878288
+      }
+    },
+    {
+      "seed": 17,
+      "trajectory_duration_s": 139.738,
+      "main_rows": 432,
+      "main_correct_selection_rows": 432,
+      "main_narrow_com_in_frame_fraction": 0.9861111111111112,
+      "main_narrow_boresight_inside_body_fraction": 0.9467592592592593,
+      "incorrect_selection_rows": 0,
+      "early_visual_main_rows": 0,
+      "travel_violation_rows": 0,
+      "main_pointing_error_percentiles_deg": {
+        "p50": 0.03544815791016309,
+        "p90": 0.04061019370352641,
+        "p95": 0.0416938377989601,
+        "p99": 0.31274538148398007,
+        "max": 0.5152661933728505
+      }
+    }
+  ],
+  "limits": "Ideal simulations do not qualify physical tracking. Offline fixture and deployment paths were made portable for publication; core tracking algorithms retain their verified hashes."
+}

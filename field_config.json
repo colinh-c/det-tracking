@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "coordinate_frame": "ENU",
+  "heading_reference": "true_north_clockwise",
+  "geometry": {
+    "pad_horizontal_distance_m": 500.0,
+    "pad_bearing_deg": 0.0,
+    "pad_height_relative_to_tracker_m": 0.0,
+    "rail_tilt_from_vertical_deg": 0.0,
+    "rail_bearing_deg": 0.0
+  },
+  "measurement_status": {
+    "pad_horizontal_distance_m": "nominal",
+    "pad_bearing_deg": "nominal",
+    "pad_height_relative_to_tracker_m": "nominal",
+    "rail_tilt_from_vertical_deg": "nominal",
+    "rail_bearing_deg": "nominal"
+  },
+  "notes": "Nominal, unmeasured setup. Replace with on-site measurements before relying on geometry."
+}
